@@ -21,7 +21,7 @@
     "EventBridgeScheduleExpression": "cron(00 22 ? * MON_FRI *)",
     "LambdaExecutionRoleArn": "arn:aws:iam::region:account_id:role/etf_kpis_scraper_iam_lambda_execution_role",
     "Architectures": "x86_64",
-    "Runtime": "python3.11",
+    "Runtime": "python3.12",
     "Timeout": 30
   },
   "ecs_fargate.yaml": {

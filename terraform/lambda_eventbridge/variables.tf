@@ -14,7 +14,7 @@ variable "stack_name" {
 }
 
 variable "lambda_runtime" {
-  description = "Runtime for the Lambda function (e.g., python3.11)"
+  description = "Runtime for the Lambda function (e.g., python3.12)"
   type        = string
 }
 

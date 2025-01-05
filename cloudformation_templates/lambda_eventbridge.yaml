@@ -26,7 +26,7 @@ Parameters:
   Runtime:
     Type: String
     Description: The runtime of the Lambda function
-    Default: python3.11
+    Default: python3.12
   Timeout:
     Type: Number
     Description: The timeout of the Lambda function in seconds
