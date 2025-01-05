@@ -1,13 +1,13 @@
-FROM python:3.11.9-slim-bullseye AS python-base
+FROM python:3.12-slim-bullseye AS python-base
 
-    # Ensure python I/O is unbuffered so that log messages are flushed to the stream
+# Ensure python I/O is unbuffered so that log messages are flushed to the stream
 ENV PYTHONUNBUFFERED=1 \ 
     # Prevents Python from creating pyc files
     PYTHONDONTWRITEBYTECODE=1 \ 
     # See https://github.com/python-poetry/poetry/issues/2200 and https://github.com/python-poetry/poetry/pull/7081
     POETRY_REQUESTS_TIMEOUT=30 \
     # Poetry version
-    POETRY_VERSION=1.8.3 \
+    POETRY_VERSION=2.0.0 \
     # Override the poetry installation path
     POETRY_HOME="/opt/poetry" \
     # Create virtualenv inside the project root
@@ -31,7 +31,7 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 # Copy lock file and pyproject.toml from local project root onto the container
 WORKDIR $PROJECT_ROOT_PATH
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --only main --sync --no-root
+RUN poetry sync --no-root --only main
 
 FROM python-base AS production 
 

@@ -36,31 +36,30 @@ Configure `poetry` to create the virtual environment inside the project's root d
 ```bash
 $ poetry config virtualenvs.in-project true --local
 $ cd path_to_cloned_repository
-$ poetry install --sync
+$ poetry sync --with main
 ```
 
 ### Method 2: Using `pyenv` and `poetry` Together
 
-With [pyenv](https://github.com/pyenv/pyenv), ensure that Python (`3.11` is the default for this project) is installed:
+With [pyenv](https://github.com/pyenv/pyenv), ensure that Python (`3.12` is the default for this project) is installed:
 
 ```bash
 # List available Python versions 10 through 12
 $ pyenv install --list | grep " 3\.\(10\|11\|12\)\."
-# Install Python 3.11.8
-$ pyenv install 3.11.8
-# Activate Python 3.11.8 for the current project
-$ pyenv local 3.11.8
+# Install Python 3.12.8
+$ pyenv install 3.12.8
+# Activate Python 3.12.8 for the current project
+$ pyenv local 3.12.8
 # Use currently activated Python version to create the virtual environment
-$ poetry config virtualenvs.prefer-active-python true --local
-$ poetry install --sync
+$ poetry sync --with main
 ```
 
 ### Method 3: Using `conda` and `poetry` Together
 
-1. Create a new conda environment named `etf_kpis_scraper` with Python `3.11`:
+1. Create a new conda environment named `etf_kpis_scraper` with Python `3.12`:
 
 ```bash
-$ yes | conda create --name etf_kpis_scraper python=3.11
+$ yes | conda create --name etf_kpis_scraper python=3.12
 ```
 
 2. Install the project dependencies (ensure that the `conda` environment is activated):
@@ -68,7 +67,7 @@ $ yes | conda create --name etf_kpis_scraper python=3.11
 ```bash
 $ cd path_to_cloned_repository
 $ conda activate etf_kpis_scraper
-$ poetry install --sync
+$ poetry sync --with main
 ```
 
 ## Create Environment Variables
