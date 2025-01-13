@@ -3,8 +3,21 @@
 # Get the current working directory
 cwd=$(pwd)
 
-# Install dependencies into a "package" directory within cwd
-pip install --target "$cwd/package" -r requirements.txt
+# Define the target platform and Python version for AWS Lambda
+target_platform="manylinux2014_x86_64"
+python_version="312"
+
+# Create a "package" directory to store dependencies
+mkdir -p "$cwd/package"
+
+# Install dependencies for the specified platform
+pip install --platform "$target_platform" \
+    --target "$cwd/package" \
+    --implementation cp \
+    --python-version "$python_version" \
+    --only-binary=:all: \
+    -r requirements.txt
+
 cd "$cwd/package" || exit
 
 # Create a zip archive containing the contents of the package directory
