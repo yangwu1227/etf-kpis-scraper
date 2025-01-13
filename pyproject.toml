@@ -1,6 +1,6 @@
 [project]
 name = "etf-kpis-scraper"
-description = "ETF data scraper leveraging AWS, Yahoo Finance, and Alpha Vantage APIs"
+description = "ETF kpis scraper leveraging AWS, Yahoo Finance, and Alpha Vantage APIs"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -22,8 +22,8 @@ package-mode = false
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = ">=6.29.5"
-boto3 = ">=1.35.92"
-boto3-stubs = {version = ">=1.35.92", extras = ["cloudformation", "ecs"]}
+boto3 = ">=1.35.97"
+boto3-stubs = {version = ">=1.35.97", extras = ["cloudformation", "ecs"]}
 
 [tool.poetry.group.lint-fmt.dependencies]
 mypy = ">=1.14.1"
