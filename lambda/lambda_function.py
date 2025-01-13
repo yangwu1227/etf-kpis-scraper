@@ -9,7 +9,7 @@ from mypy_boto3_ecs.type_defs import (
     ContainerOverrideTypeDef,
     NetworkConfigurationTypeDef,
 )
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pydantic_settings import SettingsConfigDict
 
 ecs_client: ECSClient = boto3.client("ecs")
@@ -22,14 +22,14 @@ class EnvironmentConfig(BaseModel):
     Environment configuration for the Lambda function.
     """
 
-    cluster_name: str = Field(alias="ECS_CLUSTER_NAME")
-    task_definition: str = Field(alias="ECS_TASK_DEFINITION")
-    container_name: str = Field(alias="ECS_CONTAINER_NAME")
-    subnet_1: str = Field(alias="SUBNET_1")
-    subnet_2: str = Field(alias="SUBNET_2")
-    security_group: str = Field(alias="SECURITY_GROUP")
-    assign_public_ip: Literal["ENABLED", "DISABLED"] = Field(alias="ASSIGN_PUBLIC_IP")
-    env: str = Field(default="prod", alias="env")
+    cluster_name: str
+    task_definition: str
+    container_name: str
+    subnet_1: str
+    subnet_2: str
+    security_group: str
+    assign_public_ip: Literal["ENABLED", "DISABLED"] = "DISABLED"
+    env: str = "prod"
 
     model_config = SettingsConfigDict(
         frozen=True,
