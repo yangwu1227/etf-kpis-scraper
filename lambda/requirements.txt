@@ -1,1 +1,1 @@
-boto3-stubs[ecs]>=1.35.62
+boto3-stubs[ecs]>=1.35.97
