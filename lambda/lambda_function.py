@@ -22,16 +22,14 @@ class EnvironmentConfig(BaseModel):
     Environment configuration for the Lambda function.
     """
 
-    cluster_name: str = Field(default="", validation_alias="ECS_CLUSTER_NAME")
-    task_definition: str = Field(default="", validation_alias="ECS_TASK_DEFINITION")
-    container_name: str = Field(default="", validation_alias="ECS_CONTAINER_NAME")
-    subnet_1: str = Field(default="", validation_alias="SUBNET_1")
-    subnet_2: str = Field(default="", validation_alias="SUBNET_2")
-    security_group: str = Field(default="", validation_alias="SECURITY_GROUP")
-    assign_public_ip: Literal["ENABLED", "DISABLED"] = Field(
-        default="DISABLED", validation_alias="ASSIGN_PUBLIC_IP"
-    )
-    env: str = Field(default="prod", validation_alias="env")
+    cluster_name: str = Field(alias="ECS_CLUSTER_NAME")
+    task_definition: str = Field(alias="ECS_TASK_DEFINITION")
+    container_name: str = Field(alias="ECS_CONTAINER_NAME")
+    subnet_1: str = Field(alias="SUBNET_1")
+    subnet_2: str = Field(alias="SUBNET_2")
+    security_group: str = Field(alias="SECURITY_GROUP")
+    assign_public_ip: Literal["ENABLED", "DISABLED"] = Field(alias="ASSIGN_PUBLIC_IP")
+    env: str = Field(default="prod", alias="env")
 
     model_config = SettingsConfigDict(
         frozen=True,
@@ -67,7 +65,7 @@ def environment_config() -> EnvironmentConfig:
         empty_fields = [
             field
             for field, value in env_config.model_dump().items()
-            if field != "env" and field != "assign_public_ip" and not value
+            if field not in ["env", "assign_public_ip"] and not value
         ]
         if empty_fields:
             raise ValueError(
