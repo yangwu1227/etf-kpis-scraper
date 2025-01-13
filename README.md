@@ -29,14 +29,14 @@ Install `poetry` using the official installer for your operating system. Detaile
 
 There are three primary methods to set up and use `poetry` for this project:
 
-### Method 1: Using `poetry` 
+### Method 1: Using `poetry`
 
 Configure `poetry` to create the virtual environment inside the project's root directory (and only do so for the current project using the [--local](https://python-poetry.org/docs/configuration/#local-configuration) flag):
 
 ```bash
-$ poetry config virtualenvs.in-project true --local
-$ cd path_to_cloned_repository
-$ poetry sync --only main
+poetry config virtualenvs.in-project true --local
+cd path_to_cloned_repository
+poetry sync --only main
 ```
 
 ### Method 2: Using `pyenv` and `poetry` Together
@@ -51,7 +51,7 @@ $ pyenv install 3.12.8
 # Activate Python 3.12.8 for the current project
 $ pyenv local 3.12.8
 # Use currently activated Python version to create the virtual environment
-$ poetry sync --only main
+$ poetry sync --all-groups
 ```
 
 ### Method 3: Using `conda` and `poetry` Together
@@ -59,15 +59,15 @@ $ poetry sync --only main
 1. Create a new conda environment named `etf_kpis_scraper` with Python `3.12`:
 
 ```bash
-$ yes | conda create --name etf_kpis_scraper python=3.12
+yes | conda create --name etf_kpis_scraper python=3.12
 ```
 
 2. Install the project dependencies (ensure that the `conda` environment is activated):
 
 ```bash
-$ cd path_to_cloned_repository
-$ conda activate etf_kpis_scraper
-$ poetry sync --only main
+cd path_to_cloned_repository
+conda activate etf_kpis_scraper
+poetry sync --all-groups
 ```
 
 ## Create Environment Variables
@@ -86,7 +86,7 @@ Set `ENV` to `dev` (i.e., the default) to run the scraper in `dev` mode when run
 
 Details on these environment variables can be found in the [Modules](https://kenwuyang.com/posts/2024_06_22_scraping_etf_kpis_with_aws_lambda_aws_fargate_and_alpha_vantage_yahoo_finance_apis/#modules) subsection of the blog post.
 
-## Workflow Secrets 
+## Workflow Secrets
 
 The workflows require the following secrets:
 
@@ -102,6 +102,6 @@ The workflows require the following secrets:
 
 ## AWS CLI for Programmatic Deployment
 
-To deploy the resources programmatically via the [boto3](https://boto3.amazonaws.com/v1/documentation/api/latest/index.html) SDK or via the command line instead of using the AWS console, ensure that the AWS CLI is installed on the local machine and that it is configured with the necessary credentials. Follow the instructions in the [AWS CLI Documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html).
+To deploy the resources programmatically via the Terraform instead of using the AWS console, ensure that the AWS CLI is installed on the local machine and that it is configured with the necessary credentials. Follow the instructions in the [AWS CLI Documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html).
 
-A simple starting point, though it may violate the principle of least privilege, is to create an IAM user with [programmatic access](https://docs.aws.amazon.com/workspaces-web/latest/adminguide/getting-started-iam-user-access-keys.html) that can assume an IAM role with the [AdministratorAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AdministratorAccess.html) policy attached.
+A simple starting point, though it may violate the principle of least privilege, is to use the [AdministratorAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AdministratorAccess.html) policy.
