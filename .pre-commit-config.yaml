@@ -54,5 +54,5 @@ repos:
         language: system
         pass_filenames: false
         files: ^(pyproject.toml|poetry.lock)$
-        stages: [post-checkout, post-merge, post-rewrite]
+        stages: [post-checkout, post-merge, post-rewrite, post-commit]
         args: ["--all-groups"]
