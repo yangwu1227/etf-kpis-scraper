@@ -28,7 +28,9 @@ repos:
     hooks:
       - id: poetry-check
         args: ["--strict", "--lock"] # Strict checking and verify lock file exists
+        files: ^(pyproject.toml|poetry.lock)$
       - id: poetry-lock
+        files: ^(pyproject.toml|poetry.lock)$
 
     # Separate repo for the export plugin
   - repo: https://github.com/python-poetry/poetry-plugin-export
@@ -43,6 +45,7 @@ repos:
             "requirements.txt",
             "--without-hashes",
           ]
+        files: ^(pyproject.toml|poetry.lock)$
 
     # Local custom hooks for poetry sync instead of using poetry install
   - repo: local
