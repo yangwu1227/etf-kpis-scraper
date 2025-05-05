@@ -8,78 +8,10 @@ from pyrate_limiter import Duration, Limiter, RequestRate
 from requests import Session
 from requests_cache import CacheMixin, SQLiteCache
 from requests_ratelimiter import LimiterMixin, MemoryQueueBucket
-from yfinance.scrapers.quote import Quote
 
 apikey = os.getenv("API_KEY")
 csv_url = f"https://www.alphavantage.co/query?function=LISTING_STATUS&state=active&apikey={apikey}"
 pd.set_option("mode.copy_on_write", True)
-
-
-def patched_fetch_info(self, proxy):
-    if self._already_fetched:
-        return
-    self._already_fetched = True
-    modules = [
-        "financialData",
-        "quoteType",
-        "defaultKeyStatistics",
-        "assetProfile",
-        "summaryDetail",
-    ]
-    result = self._fetch(proxy, modules=modules)
-
-    additional_info = self._fetch_additional_info(proxy)
-    # Check if result and additional_info are not None
-    if result is not None and additional_info is not None:
-        result.update(additional_info)
-
-    if result is None:
-        self._info = {}
-        return
-
-    query1_info = {}
-    for quote in ["quoteSummary", "quoteResponse"]:
-        if quote in result:
-            result[quote]["result"][0]["symbol"] = self._symbol
-            query_info = next(
-                (
-                    info
-                    for info in result.get(quote, {}).get("result", [])
-                    if info["symbol"] == self._symbol
-                ),
-                None,
-            )
-            if query_info:
-                query1_info.update(query_info)
-
-    processed_info = {}
-    for k, v in query1_info.items():
-        if isinstance(v, dict):
-            for k1, v1 in v.items():
-                if v1 is not None:
-                    processed_info[k1] = 86400 if k1 == "maxAge" and v1 == 1 else v1
-        elif v is not None:
-            processed_info[k] = v
-
-    query1_info = processed_info
-
-    def _format(k, v):
-        if isinstance(v, dict) and "raw" in v and "fmt" in v:
-            v2 = v["fmt"] if k in {"regularMarketTime", "postMarketTime"} else v["raw"]
-        elif isinstance(v, list):
-            v2 = [_format(None, x) for x in v]
-        elif isinstance(v, dict):
-            v2 = {k: _format(k, x) for k, x in v.items()}
-        elif isinstance(v, str):
-            v2 = v.replace("\xa0", " ")
-        else:
-            v2 = v
-        return v2
-
-    self._info = {k: _format(k, v) for k, v in query1_info.items()}
-
-
-Quote._fetch_info = patched_fetch_info
 
 
 class CachedLimiterSession(CacheMixin, LimiterMixin, Session):
