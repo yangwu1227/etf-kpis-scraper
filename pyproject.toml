@@ -10,7 +10,7 @@ dependencies = [
     "requests-cache (>=1.2.1)",
     "pyrate-limiter (>=2.10.0) ; python_version >= '3.12' and python_version < '4.0'",
     "requests-ratelimiter (>=0.7.0) ; python_version >= '3.12' and python_version < '4.0'",
-    "awswrangler (>=3.10.1) ; python_version >= '3.12' and python_version < '4.0'",
+    "awswrangler (>=3.11.0) ; python_version >= '3.12' and python_version < '4.0'",
 ]
 
 [build-system]
