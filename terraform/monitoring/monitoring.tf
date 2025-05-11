@@ -5,8 +5,8 @@ locals {
 }
 
 # SNS topics for notifications
-resource "aws_sns_topic" "task_success" {
-  name = "${var.stack_name}_task_success"
+resource "aws_sns_topic" "success" {
+  name = "${var.stack_name}_success"
 
   # Add delivery policy with variables
   delivery_policy = jsonencode({
@@ -24,13 +24,13 @@ resource "aws_sns_topic" "task_success" {
   })
 
   tags = {
-    Name    = "${var.stack_name}_task_success"
+    Name    = "${var.stack_name}_success"
     project = var.stack_name
   }
 }
 
-resource "aws_sns_topic" "task_failure" {
-  name = "${var.stack_name}_task_failure"
+resource "aws_sns_topic" "failure" {
+  name = "${var.stack_name}_failure"
 
   # Add delivery policy with variables
   delivery_policy = jsonencode({
@@ -48,7 +48,7 @@ resource "aws_sns_topic" "task_failure" {
   })
 
   tags = {
-    Name    = "${var.stack_name}_task_failure"
+    Name    = "${var.stack_name}_failure"
     project = var.stack_name
   }
 }
@@ -58,7 +58,7 @@ data "aws_iam_policy_document" "events_to_sns_success" {
   statement {
     effect    = "Allow"
     actions   = ["SNS:Publish"]
-    resources = [aws_sns_topic.task_success.arn]
+    resources = [aws_sns_topic.success.arn]
 
     principals {
       type        = "Service"
@@ -71,7 +71,7 @@ data "aws_iam_policy_document" "events_to_sns_failure" {
   statement {
     effect    = "Allow"
     actions   = ["SNS:Publish"]
-    resources = [aws_sns_topic.task_failure.arn]
+    resources = [aws_sns_topic.failure.arn]
 
     principals {
       type        = "Service"
@@ -81,13 +81,13 @@ data "aws_iam_policy_document" "events_to_sns_failure" {
 }
 
 # Apply policies to respective topics
-resource "aws_sns_topic_policy" "events_to_task_success_sns" {
-  arn    = aws_sns_topic.task_success.arn
+resource "aws_sns_topic_policy" "events_to_success_sns" {
+  arn    = aws_sns_topic.success.arn
   policy = data.aws_iam_policy_document.events_to_sns_success.json
 }
 
-resource "aws_sns_topic_policy" "events_to_task_failure_sns" {
-  arn    = aws_sns_topic.task_failure.arn
+resource "aws_sns_topic_policy" "events_to_failure_sns" {
+  arn    = aws_sns_topic.failure.arn
   policy = data.aws_iam_policy_document.events_to_sns_failure.json
 }
 
@@ -122,7 +122,7 @@ resource "aws_iam_policy" "chatbot_policy" {
     Statement = [
       {
         Effect   = "Allow"
-        Action   = var.chatbot_iam_permissions
+        Action   = var.chatbot_policies
         Resource = "*"
       }
     ]
@@ -141,27 +141,27 @@ resource "aws_iam_role_policy_attachment" "chatbot_policy_attachment" {
   ]
 }
 
-# CloudWatch log metrics and filters
-resource "aws_cloudwatch_log_metric_filter" "task_success" {
-  name           = "${var.stack_name}_task_success"
+# CloudWatch log filters and alarms
+resource "aws_cloudwatch_log_metric_filter" "success" {
+  name           = "${var.stack_name}_success"
   pattern        = var.success_pattern
   log_group_name = local.log_group_name
 
   metric_transformation {
-    name          = "${var.stack_name}_task_success_metric"
+    name          = "${var.stack_name}_success_metric"
     namespace     = "Custom/ECSFargate"
     value         = "1"
     default_value = "0"
   }
 }
 
-resource "aws_cloudwatch_log_metric_filter" "task_failure" {
-  name           = "${var.stack_name}_task_failure"
+resource "aws_cloudwatch_log_metric_filter" "failure" {
+  name           = "${var.stack_name}_failure"
   pattern        = var.failure_pattern
   log_group_name = local.log_group_name
 
   metric_transformation {
-    name          = "${var.stack_name}_task_failure_metric"
+    name          = "${var.stack_name}_failure_metric"
     namespace     = "Custom/ECSFargate"
     value         = "1"
     default_value = "0"
@@ -169,100 +169,73 @@ resource "aws_cloudwatch_log_metric_filter" "task_failure" {
 }
 
 # CloudWatch alarms
-resource "aws_cloudwatch_metric_alarm" "task_success" {
-  alarm_name          = "${var.stack_name}_task_success"
+resource "aws_cloudwatch_metric_alarm" "success" {
+  alarm_name          = "${var.stack_name}_success"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = var.evaluation_periods
-  metric_name         = "${var.stack_name}_task_success_metric"
+  metric_name         = "${var.stack_name}_success_metric"
   namespace           = "Custom/ECSFargate"
   period              = var.period
   statistic           = "Sum"
   threshold           = 1
   alarm_description   = "This alarm monitors successful completion of fargate task for ${var.stack_name}"
-  alarm_actions       = [aws_sns_topic.task_success.arn]
+  alarm_actions       = [aws_sns_topic.success.arn]
   treat_missing_data  = var.treat_missing_data
   datapoints_to_alarm = var.datapoints_to_alarm
 
   tags = {
-    Name    = "${var.stack_name}_task_success_alarm"
+    Name    = "${var.stack_name}_success_alarm"
     project = var.stack_name
   }
 
   depends_on = [
-    aws_cloudwatch_log_metric_filter.task_success,
-    aws_sns_topic.task_success
+    aws_cloudwatch_log_metric_filter.success,
+    aws_sns_topic.success
   ]
 }
 
-resource "aws_cloudwatch_metric_alarm" "task_failure" {
-  alarm_name          = "${var.stack_name}_task_failure"
+resource "aws_cloudwatch_metric_alarm" "failure" {
+  alarm_name          = "${var.stack_name}_failure"
   comparison_operator = "GreaterThanOrEqualToThreshold"
   evaluation_periods  = var.evaluation_periods
-  metric_name         = "${var.stack_name}_task_failure_metric"
+  metric_name         = "${var.stack_name}_failure_metric"
   namespace           = "Custom/ECSFargate"
   period              = var.period
   statistic           = "Sum"
   threshold           = 1
   alarm_description   = "This alarm monitors failures in fargate task for ${var.stack_name}"
-  alarm_actions       = [aws_sns_topic.task_failure.arn]
+  alarm_actions       = [aws_sns_topic.failure.arn]
   treat_missing_data  = var.treat_missing_data
   datapoints_to_alarm = var.datapoints_to_alarm
 
   tags = {
-    Name    = "${var.stack_name}_task_failure_alarm"
+    Name    = "${var.stack_name}_failure_alarm"
     project = var.stack_name
   }
 
   depends_on = [
-    aws_cloudwatch_log_metric_filter.task_failure,
-    aws_sns_topic.task_failure
-  ]
-}
-
-resource "aws_cloudwatch_metric_alarm" "container_exit_failure" {
-  alarm_name          = "${var.stack_name}_container_exit_failure"
-  comparison_operator = "GreaterThanThreshold"
-  evaluation_periods  = var.container_exit_evaluation_periods
-  metric_name         = "ContainerExitCode"
-  namespace           = "AWS/ECS"
-  period              = var.container_exit_period
-  statistic           = "Maximum"
-  threshold           = var.container_exit_threshold
-  alarm_description   = "This alarm monitors ECS task exit codes for non-zero values"
-  alarm_actions       = [aws_sns_topic.task_failure.arn]
-  treat_missing_data  = var.container_missing_data # Infrastructure metric, use "missing" per AWS recommendation
-  datapoints_to_alarm = var.datapoints_to_alarm
-  ok_actions          = [aws_sns_topic.task_success.arn]
-
-  dimensions = {
-    ClusterName = local.ecs_cluster_name
-  }
-
-  tags = {
-    Name    = "${var.stack_name}_container_exit_failure_alarm"
-    project = var.stack_name
-  }
-
-  depends_on = [
-    aws_sns_topic.task_failure,
-    aws_sns_topic.task_success
+    aws_cloudwatch_log_metric_filter.failure,
+    aws_sns_topic.failure
   ]
 }
 
 # EventBridge rules and targets for ECS task state changes
-# Documentation: https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-pattern.html
-resource "aws_cloudwatch_event_rule" "ecs_task_stopped" {
-  name        = "${var.stack_name}_task_stopped"
-  description = "Capture ECS task stopped events for ${var.stack_name}"
-  state       = "ENABLED" # Explicitly enable the rule
+# Event bridge examples: https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-pattern.html
+# Describe task API: https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_DescribeTasks.html
+resource "aws_cloudwatch_event_rule" "task_exit_failure" {
+  name        = "${var.stack_name}_task_exit_failure"
+  description = "Match tasks with certain stopped codes"
+  state       = "ENABLED"
 
   event_pattern = jsonencode({
     source      = ["aws.ecs"],
     detail-type = ["ECS Task State Change"],
+    # Task-level failures (not container-level failure, which is handled by cloudwatch alarms): https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_Task.html
     detail = {
-      clusterArn    = ["arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:cluster/${local.ecs_cluster_name}"],
-      lastStatus    = ["STOPPED"],
-      stoppedReason = [{ "anything-but" : "Essential container in task exited" }]
+      clusterArn = ["arn:aws:ecs:${var.region}:${data.aws_caller_identity.current.account_id}:cluster/${local.ecs_cluster_name}"],
+      lastStatus = ["STOPPED"],
+      # EssentialContainerExited is already covered by the cloudwatch alarm with log metric filter
+      stopCode = [{ "anything-but" : ["UserInitiated", "ServiceSchedulerInitiated", "EssentialContainerExited"] }]
     }
   })
 
@@ -272,13 +245,13 @@ resource "aws_cloudwatch_event_rule" "ecs_task_stopped" {
 }
 
 resource "aws_cloudwatch_event_target" "ecs_task_stopped_to_sns" {
-  rule      = aws_cloudwatch_event_rule.ecs_task_stopped.name
+  rule      = aws_cloudwatch_event_rule.task_exit_failure.name
   target_id = "${var.stack_name}_ecs_task_stopped_sns"
-  arn       = aws_sns_topic.task_failure.arn
+  arn       = aws_sns_topic.failure.arn
 
   depends_on = [
-    aws_cloudwatch_event_rule.ecs_task_stopped,
-    aws_sns_topic.task_failure
+    aws_cloudwatch_event_rule.task_exit_failure,
+    aws_sns_topic.failure
   ]
 }
 
@@ -290,8 +263,8 @@ resource "aws_chatbot_slack_channel_configuration" "chatbot_slack" {
   slack_team_id      = var.slack_workspace_id
 
   sns_topic_arns = [
-    aws_sns_topic.task_success.arn,
-    aws_sns_topic.task_failure.arn
+    aws_sns_topic.success.arn,
+    aws_sns_topic.failure.arn
   ]
   guardrail_policy_arns = var.guardrail_policies
   logging_level         = var.logging_level
@@ -303,7 +276,7 @@ resource "aws_chatbot_slack_channel_configuration" "chatbot_slack" {
   depends_on = [
     aws_iam_role.chatbot_role,
     aws_iam_role_policy_attachment.chatbot_policy_attachment,
-    aws_sns_topic.task_success,
-    aws_sns_topic.task_failure
+    aws_sns_topic.success,
+    aws_sns_topic.failure
   ]
 }

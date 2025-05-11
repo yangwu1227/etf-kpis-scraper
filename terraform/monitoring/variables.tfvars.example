@@ -42,5 +42,6 @@ chatbot_iam_permissions       = [
   "logs:TestMetricFilter",
   "logs:FilterLogEvents",
   "sns:Get*",
-  "sns:List*"
+  "sns:List*",
+  "ecs:DescribeTasks"
 ]
