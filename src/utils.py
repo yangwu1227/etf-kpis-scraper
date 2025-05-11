@@ -45,14 +45,11 @@ def exit_on_error(
     """
 
     def decorator(decorated_function: Callable[P, R]) -> Callable[P, NoReturn]:
+        # Use provided logger or create one based on function name
+        logger = logger or setup_logger(decorated_function.__name__)
+
         @wraps(decorated_function)
         def safe_wrapper(*args: P.args, **kwargs: P.kwargs) -> NoReturn:
-            # Use provided logger or create one based on function name
-            logger = (
-                logger
-                if logger is not None
-                else setup_logger(decorated_function.__name__)
-            )
             try:
                 decorated_function(*args, **kwargs)
                 sys.exit(0)
