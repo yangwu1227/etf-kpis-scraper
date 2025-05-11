@@ -48,7 +48,7 @@ def main() -> int:
         s3_bucket = os.getenv("S3_BUCKET")
         if not s3_bucket:
             logger.error("[ERROR] S3_BUCKET environment variable is not set")
-            raise RuntimeError("S3_BUCKET is required")
+            raise RuntimeError("The S3_BUCKET environment variable is required")
 
         parquet = os.getenv("PARQUET") == "True"
         s3_path = f"s3://{s3_bucket}/daily-kpis/etf_kpis_{datetime.today().strftime('%Y_%m_%d')}"
