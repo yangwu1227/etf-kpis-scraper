@@ -32,7 +32,7 @@ chatbot_tags                  = {
   Environment = "Development",
   Service     = "Monitoring"
 }
-chatbot_iam_permissions       = [
+chatbot_policies              = [
   "cloudwatch:Describe*",
   "cloudwatch:Get*",
   "cloudwatch:List*",

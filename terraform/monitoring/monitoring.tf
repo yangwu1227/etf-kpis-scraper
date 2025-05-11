@@ -256,6 +256,21 @@ resource "aws_cloudwatch_event_target" "ecs_task_stopped_to_sns" {
 }
 
 # AWS chatbot slack configuration
+resource "aws_iam_policy" "additional_guardrail_policy" {
+  name        = "${var.stack_name}_additional_guardrail_policy"
+  description = "Additional guardrail policy for AWS chatbot"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Action   = ["ecs:DescribeTasks"]
+        Resource = "*"
+      }
+    ]
+  })
+}
 resource "aws_chatbot_slack_channel_configuration" "chatbot_slack" {
   configuration_name = "${var.stack_name}_slack_config"
   iam_role_arn       = aws_iam_role.chatbot_role.arn
@@ -266,7 +281,7 @@ resource "aws_chatbot_slack_channel_configuration" "chatbot_slack" {
     aws_sns_topic.success.arn,
     aws_sns_topic.failure.arn
   ]
-  guardrail_policy_arns = var.guardrail_policies
+  guardrail_policy_arns = concat(var.guardrail_policies, [aws_iam_policy.additional_guardrail_policy.arn])
   logging_level         = var.logging_level
 
   tags = merge(var.chatbot_tags, {
