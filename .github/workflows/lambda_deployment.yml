@@ -7,6 +7,12 @@ on:
     paths:
       - lambda/**
       - .github/workflows/lambda_deployment.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - lambda/**
+      - .github/workflows/lambda_deployment.yml
   workflow_dispatch:
 
 permissions:

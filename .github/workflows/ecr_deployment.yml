@@ -11,6 +11,16 @@ on:
       - pyproject.toml
       - poetry.lock
       - .github/workflows/ecr_deployment.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - Dockerfile
+      - src/**
+      - main.py
+      - pyproject.toml
+      - poetry.lock
+      - .github/workflows/ecr_deployment.yml
   workflow_dispatch:
 
 permissions:
