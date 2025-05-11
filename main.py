@@ -21,6 +21,9 @@ def main() -> int:
         os.getenv("IPO_DATE", datetime.today().strftime("%Y-%m-%d")), "%Y-%m-%d"
     )
     etfs_data = query_etf_data(logger=logger, max_etfs=max_etfs, ipo_date=ipo_date)
+    if etfs_data.isna().to_numpy().all():
+        logger.error("[ERROR] ETF data is completely filled with missing values")
+        return 1
 
     s3_bucket = os.getenv("S3_BUCKET")
     if not s3_bucket:
