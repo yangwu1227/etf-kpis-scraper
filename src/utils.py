@@ -48,7 +48,7 @@ def exit_on_error(
         @wraps(decorated_function)
         def safe_wrapper(*args: P.args, **kwargs: P.kwargs) -> NoReturn:
             # Use provided logger or create one based on function name
-            log = (
+            logger = (
                 logger
                 if logger is not None
                 else setup_logger(decorated_function.__name__)
@@ -57,7 +57,7 @@ def exit_on_error(
                 decorated_function(*args, **kwargs)
                 sys.exit(0)
             except Exception:
-                log.exception("[ERROR] Unhandled exception; exiting")
+                logger.exception("[ERROR] Unhandled exception error occurred")
                 sys.exit(1)
 
         return safe_wrapper
