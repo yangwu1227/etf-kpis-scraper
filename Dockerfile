@@ -41,6 +41,10 @@ COPY --from=builder $PROJECT_ROOT_PATH $PROJECT_ROOT_PATH
 COPY src/ $PROJECT_ROOT_PATH/src
 COPY main.py $PROJECT_ROOT_PATH/main.py
 
+# Copy the entrypoint script from local project root onto the container
+COPY docker_entrypoint.sh $PROJECT_ROOT_PATH/docker_entrypoint.sh
+RUN chmod +x $PROJECT_ROOT_PATH/docker_entrypoint.sh
+
 WORKDIR $PROJECT_ROOT_PATH
-# Use the python interpreter and packages from the virtual environment directly (without poetry run)
-CMD [".venv/bin/python3", "main.py"]
+# The entrypoint script adds timeout logic for the python process
+ENTRYPOINT ["./docker_entrypoint.sh"]

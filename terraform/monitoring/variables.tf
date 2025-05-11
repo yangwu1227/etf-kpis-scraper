@@ -123,8 +123,8 @@ variable "guardrail_policies" {
   default     = ["arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"]
 }
 
-variable "chatbot_iam_permissions" {
-  description = "List of IAM permissions for ChatBot role"
+variable "chatbot_policies" {
+  description = "List of IAM permissions for the policy to attach to the ChatBot role"
   type        = list(string)
   default = [
     "cloudwatch:Describe*",
@@ -136,7 +136,8 @@ variable "chatbot_iam_permissions" {
     "logs:TestMetricFilter",
     "logs:FilterLogEvents",
     "sns:Get*",
-    "sns:List*"
+    "sns:List*",
+    "ecs:DescribeTasks"
   ]
 }
 

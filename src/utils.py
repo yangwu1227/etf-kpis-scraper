@@ -2,7 +2,7 @@ import logging
 import sys
 from collections.abc import Callable
 from functools import wraps
-from typing import Any, Dict, List, NoReturn, Optional, ParamSpec, TypeVar, overload
+from typing import ParamSpec, TypeVar, Union
 
 import awswrangler as wr
 import pandas as pd
@@ -11,59 +11,35 @@ P = ParamSpec("P")  # Captures the parameter types of a callable
 R = TypeVar("R")  # Represents the return type of a callable
 
 
-@overload
-def exit_on_error(decorated_function: Callable[P, R]) -> Callable[P, R]: ...
-
-
-@overload
-def exit_on_error(
-    *, logger: logging.Logger
-) -> Callable[[Callable[P, R]], Callable[P, R]]: ...
-
-
-def exit_on_error(
-    decorated_function: Any = None,
-    *,
-    logger: Optional[logging.Logger] = None,
-) -> Any:
+def catch_errors(decorated_function: Callable[P, R]) -> Callable[P, Union[R, int]]:
     """
-    Decorator that wraps a function so that any uncaught exception
-    is logged and the process exits with status code 1. On normal
-    completion, exits with status code 0.
+    Decorator that wraps a function to catch and log unhandled errors.
 
     Parameters
     ----------
-    decorated_function : Optional[Callable[P, R]]
-        The function to wrap when decorator is used without args.
-    logger : Optional[logging.Logger]
-        An explicit Logger instance to use; if None, a new one is created per function.
+    decorated_function: Callable[P, R]
+        Function to wrap.
 
     Returns
     -------
-    Callable[P, NoReturn]
-        The decorated function that runs `func` and exits interpreter.
+    Callable[P, Union[R, int]]
+        Wrapped function that returns the original function's return value
+        or 1 if an exception occurs.
     """
-    input_logger = logger
 
-    def decorator(decorated_function: Callable[P, R]) -> Callable[P, NoReturn]:
-        # Use provided logger or create one based on function name
-        local_logger = input_logger or setup_logger(decorated_function.__name__)
+    @wraps(wrapped=decorated_function)
+    def wrapper(*args: P.args, **kwargs: P.kwargs) -> Union[R, int]:
+        logger = setup_logger(name=decorated_function.__name__)
+        try:
+            return decorated_function(*args, **kwargs)
+        except Exception as unhandled_error:
+            logger.error(
+                f"[ERROR] Unhandled error occurred in {decorated_function.__name__}: {unhandled_error}",
+                exc_info=True,
+            )
+            return 1
 
-        @wraps(decorated_function)
-        def safe_wrapper(*args: P.args, **kwargs: P.kwargs) -> NoReturn:
-            try:
-                decorated_function(*args, **kwargs)
-                sys.exit(0)
-            except Exception:
-                local_logger.exception("[ERROR] Unhandled exception error occurred")
-                sys.exit(1)
-
-        return safe_wrapper
-
-    # If decorator used without parentheses
-    if decorated_function is not None and callable(decorated_function):
-        return decorator(decorated_function)
-    return decorator
+    return wrapper
 
 
 def setup_logger(name: str) -> logging.Logger:
@@ -93,9 +69,7 @@ def setup_logger(name: str) -> logging.Logger:
     return logger
 
 
-def write_to_s3(
-    data: pd.DataFrame, s3_path: str, parquet: bool = True
-) -> Dict[str, List[str]]:
+def write_to_s3(data: pd.DataFrame, s3_path: str, parquet: bool = True) -> None:
     """
     Save the input data to s3 either as a parquet file or csv file.
 
@@ -110,11 +84,10 @@ def write_to_s3(
 
     Returns
     -------
-    Dict[str, List[str]]
-        A dictionary containing list of all store objects paths
+    None
     """
     if parquet:
-        paths = wr.s3.to_parquet(df=data, path=f"{s3_path}.parquet")
+        wr.s3.to_parquet(df=data, path=f"{s3_path}.parquet")
     else:
-        paths = wr.s3.to_csv(df=data, path=f"{s3_path}.csv")
-    return paths  # type: ignore
+        wr.s3.to_csv(df=data, path=f"{s3_path}.csv")
+    return None
