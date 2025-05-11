@@ -43,10 +43,11 @@ def exit_on_error(
     Callable[P, NoReturn]
         The decorated function that runs `func` and exits interpreter.
     """
+    input_logger = logger
 
     def decorator(decorated_function: Callable[P, R]) -> Callable[P, NoReturn]:
         # Use provided logger or create one based on function name
-        logger = logger or setup_logger(decorated_function.__name__)
+        local_logger = input_logger or setup_logger(decorated_function.__name__)
 
         @wraps(decorated_function)
         def safe_wrapper(*args: P.args, **kwargs: P.kwargs) -> NoReturn:
@@ -54,7 +55,7 @@ def exit_on_error(
                 decorated_function(*args, **kwargs)
                 sys.exit(0)
             except Exception:
-                logger.exception("[ERROR] Unhandled exception error occurred")
+                local_logger.exception("[ERROR] Unhandled exception error occurred")
                 sys.exit(1)
 
         return safe_wrapper
