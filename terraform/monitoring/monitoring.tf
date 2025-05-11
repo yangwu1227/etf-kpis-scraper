@@ -62,7 +62,7 @@ data "aws_iam_policy_document" "events_to_sns_success" {
 
     principals {
       type        = "Service"
-      identifiers = ["events.amazonaws.com"]
+      identifiers = ["events.amazonaws.com", "cloudwatch.amazonaws.com"]
     }
   }
 }
@@ -75,7 +75,7 @@ data "aws_iam_policy_document" "events_to_sns_failure" {
 
     principals {
       type        = "Service"
-      identifiers = ["events.amazonaws.com"]
+      identifiers = ["events.amazonaws.com", "cloudwatch.amazonaws.com"]
     }
   }
 }
