@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import yfinance as yf
+from curl_cffi.requests.exceptions import HTTPError
 
 apikey = os.getenv("API_KEY")
 csv_url = f"https://www.alphavantage.co/query?function=LISTING_STATUS&state=active&apikey={apikey}"
@@ -16,6 +17,8 @@ random_state = np.random.RandomState(12)
 default_cache_location = Path.cwd() / ".cache" / "py-yfinance"
 default_cache_location.mkdir(parents=True, exist_ok=True)
 yf.set_tz_cache_location(default_cache_location)
+
+skippable_http_status_codes = {404, 408}
 
 
 def query_etf_data(logger: Logger, max_etfs: int, ipo_date: datetime) -> pd.DataFrame:
@@ -66,10 +69,25 @@ def query_etf_data(logger: Logger, max_etfs: int, ipo_date: datetime) -> pd.Data
     )
     yf_data = []
     for ticker in tickers.tickers.values():
-        info = ticker.info
-        # Skip if the info is empty
-        if not info:
-            continue
+        try:
+            info = ticker.info or {}
+        except HTTPError as http_error:
+            if (
+                response := http_error.response
+            ) and response.status_code in skippable_http_status_codes:
+                logger.warning(
+                    f"HTTP {response.status_code} when attempting to access `info` for ticker {ticker.ticker!r}"
+                )
+                info = {}
+            else:
+                raise http_error
+        except Exception as unexpected_error:
+            # catch anything else (parsing, attribute errors, etc.)
+            logger.warning(
+                f"Unexpected error for ticker {ticker.ticker!r}: {unexpected_error!r}; filling with pd.NA"
+            )
+            info = {}
+
         yf_data.append(
             {
                 "symbol": info.get("symbol", pd.NA),
