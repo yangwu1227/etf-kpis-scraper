@@ -271,6 +271,7 @@ resource "aws_iam_policy" "additional_guardrail_policy" {
     ]
   })
 }
+
 resource "aws_chatbot_slack_channel_configuration" "chatbot_slack" {
   configuration_name = "${var.stack_name}_slack_config"
   iam_role_arn       = aws_iam_role.chatbot_role.arn

@@ -15,7 +15,7 @@ Parameters:
   SlackChannelId:
     Type: String
     Description: The ID of the Slack channel to send notifications
-    
+
   # CloudWatch alarm parameters
   SuccessPattern:
     Type: String
@@ -354,16 +354,16 @@ Outputs:
     Description: ARN of the success SNS topic
     Value: !Ref SuccessSNSTopic
     Export:
-      Name: !Sub ${AWS::StackName}-SuccessSNSTopicArn
+      Name: !Sub ${AWS::StackName}_success_sns_topic_arn
 
   FailureSNSTopicArn:
     Description: ARN of the failure SNS topic
     Value: !Ref FailureSNSTopic
     Export:
-      Name: !Sub ${AWS::StackName}-FailureSNSTopicArn
+      Name: !Sub ${AWS::StackName}_failure_sns_topic_arn
 
   ChatbotRoleArn:
     Description: ARN of the Chatbot IAM role
     Value: !GetAtt ChatbotRole.Arn
     Export:
-      Name: !Sub ${AWS::StackName}-ChatbotRoleArn
+      Name: !Sub ${AWS::StackName}_chatbot_role_arn
