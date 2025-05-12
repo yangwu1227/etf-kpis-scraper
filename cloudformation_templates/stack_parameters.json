@@ -35,5 +35,24 @@
     "Cpu": 1024,
     "Memory": 2048,
     "SizeInGiB": 21
+  },
+  "monitoring.yaml": {
+    "StackName": "etf_kpis_scraper_monitoring",
+    "ECSClusterName": "etf_kpis_scraper_ecs_fargate_cluster",
+    "SlackWorkspaceId": "slack_workspace_id",
+    "SlackChannelId": "slack_channel_id",
+    "SuccessPattern": "[SUCCESS]",
+    "FailurePattern": "[ERROR]",
+    "EvaluationPeriods": 1,
+    "Period": 60,
+    "TreatMissingData": "notBreaching",
+    "DatapointsToAlarm": 1,
+    "SNSMinDelayTarget": 1,
+    "SNSMaxDelayTarget": 60,
+    "SNSNumRetries": 50,
+    "SNSNumNoDelayRetries": 3,
+    "SNSNumMinDelayRetries": 2,
+    "SNSBackoffFunction": "exponential",
+    "LoggingLevel": "INFO"
   }
 }

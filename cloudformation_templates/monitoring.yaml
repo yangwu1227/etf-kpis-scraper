@@ -1,0 +1,369 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Creates monitoring resources including CloudWatch alarms, SNS topics, and AWS Chatbot integration for ECS Fargate tasks.
+
+Parameters:
+  # ECS Fargate parameters
+  ECSClusterName:
+    Type: String
+    Description: The name of the ECS Fargate cluster to monitor
+
+  # Slack parameters
+  SlackWorkspaceId:
+    Type: String
+    Description: The ID of the Slack workspace/team to send notifications
+
+  SlackChannelId:
+    Type: String
+    Description: The ID of the Slack channel to send notifications
+    
+  # CloudWatch alarm parameters
+  SuccessPattern:
+    Type: String
+    Description: Log pattern that indicates task success
+    Default: "[SUCCESS]"
+
+  FailurePattern:
+    Type: String
+    Description: Log pattern that indicates task failure
+    Default: "[ERROR]"
+
+  EvaluationPeriods:
+    Type: Number
+    Description: Number of periods to evaluate for the alarm
+    Default: 1
+
+  Period:
+    Type: Number
+    Description: Duration in seconds to evaluate the metric
+    Default: 60
+
+  TreatMissingData:
+    Type: String
+    Description: How to treat missing data in CloudWatch alarms
+    Default: notBreaching
+    AllowedValues:
+      - missing
+      - ignore
+      - breaching
+      - notBreaching
+
+  DatapointsToAlarm:
+    Type: Number
+    Description: Number of datapoints that must be breaching to trigger the alarm
+    Default: 1
+
+  # SNS delivery policy parameters
+  SNSMinDelayTarget:
+    Type: Number
+    Description: The minimum delay for SNS delivery retries (in seconds)
+    Default: 1
+    MinValue: 1
+    MaxValue: 3600
+
+  SNSMaxDelayTarget:
+    Type: Number
+    Description: The maximum delay for SNS delivery retries (in seconds)
+    Default: 60
+    MinValue: 1
+    MaxValue: 3600
+
+  SNSNumRetries:
+    Type: Number
+    Description: The total number of SNS delivery retries
+    Default: 50
+    MinValue: 0
+    MaxValue: 100
+
+  SNSNumNoDelayRetries:
+    Type: Number
+    Description: The number of SNS delivery retries with no delay
+    Default: 3
+
+  SNSNumMinDelayRetries:
+    Type: Number
+    Description: The number of SNS delivery retries with minimum delay
+    Default: 2
+
+  SNSBackoffFunction:
+    Type: String
+    Description: The backoff function for SNS delivery retries
+    Default: exponential
+    AllowedValues:
+      - arithmetic
+      - exponential
+      - geometric
+      - linear
+
+  # AWS Chatbot parameters
+  LoggingLevel:
+    Type: String
+    Description: Specifies the logging level for ChatBot configuration
+    Default: INFO
+    AllowedValues:
+      - ERROR
+      - INFO
+      - NONE
+
+Resources:
+  # SNS topics for notifications
+  SuccessSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}_success
+      DeliveryPolicy:
+        http:
+          defaultHealthyRetryPolicy:
+            minDelayTarget: !Ref SNSMinDelayTarget
+            maxDelayTarget: !Ref SNSMaxDelayTarget
+            numRetries: !Ref SNSNumRetries
+            numNoDelayRetries: !Ref SNSNumNoDelayRetries
+            numMinDelayRetries: !Ref SNSNumMinDelayRetries
+            backoffFunction: !Ref SNSBackoffFunction
+          disableSubscriptionOverrides: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}_success
+        - Key: project
+          Value: !Sub ${AWS::StackName}
+
+  FailureSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: !Sub ${AWS::StackName}_failure
+      DeliveryPolicy:
+        http:
+          defaultHealthyRetryPolicy:
+            minDelayTarget: !Ref SNSMinDelayTarget
+            maxDelayTarget: !Ref SNSMaxDelayTarget
+            numRetries: !Ref SNSNumRetries
+            numNoDelayRetries: !Ref SNSNumNoDelayRetries
+            numMinDelayRetries: !Ref SNSNumMinDelayRetries
+            backoffFunction: !Ref SNSBackoffFunction
+          disableSubscriptionOverrides: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}_failure
+        - Key: project
+          Value: !Sub ${AWS::StackName}
+
+  # SNS topic policies
+  SuccessSNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref SuccessSNSTopic
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+                - cloudwatch.amazonaws.com
+            Action: SNS:Publish
+            Resource: !GetAtt SuccessSNSTopic.Arn
+
+  FailureSNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref FailureSNSTopic
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+                - cloudwatch.amazonaws.com
+            Action: SNS:Publish
+            Resource: !GetAtt FailureSNSTopic.Arn
+
+  # IAM resources for chatbot
+  ChatbotRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}_chatbot_role
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: chatbot.amazonaws.com
+            Action: sts:AssumeRole
+      Tags:
+        - Key: project
+          Value: !Sub ${AWS::StackName}
+
+  ChatbotPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${AWS::StackName}_chatbot_policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - cloudwatch:Describe*
+              - cloudwatch:Get*
+              - cloudwatch:List*
+              - logs:Get*
+              - logs:List*
+              - logs:Describe*
+              - logs:TestMetricFilter
+              - logs:FilterLogEvents
+              - sns:Get*
+              - sns:List*
+              - ecs:DescribeTasks
+            Resource: "*"
+      Roles:
+        - !Ref ChatbotRole
+
+  AdditionalGuardrailPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub ${AWS::StackName}_additional_guardrail_policy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ecs:DescribeTasks
+            Resource: "*"
+      Roles:
+        - !Ref ChatbotRole
+
+  # CloudWatch log metric filters
+  SuccessMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Sub /aws/ecs/${AWS::StackName}
+      FilterPattern: !Ref SuccessPattern
+      MetricTransformations:
+        - MetricName: !Sub ${AWS::StackName}_success_metric
+          MetricNamespace: Custom/ECSFargate
+          MetricValue: "1"
+          DefaultValue: "0"
+
+  FailureMetricFilter:
+    Type: AWS::Logs::MetricFilter
+    Properties:
+      LogGroupName: !Sub /aws/ecs/${AWS::StackName}
+      FilterPattern: !Ref FailurePattern
+      MetricTransformations:
+        - MetricName: !Sub ${AWS::StackName}_failure_metric
+          MetricNamespace: Custom/ECSFargate
+          MetricValue: "1"
+          DefaultValue: "0"
+
+  # CloudWatch alarms
+  SuccessAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub ${AWS::StackName}_success
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: !Ref EvaluationPeriods
+      MetricName: !Sub ${AWS::StackName}_success_metric
+      Namespace: Custom/ECSFargate
+      Period: !Ref Period
+      Statistic: Sum
+      Threshold: 1
+      AlarmDescription: !Sub This alarm monitors successful completion of fargate task for ${AWS::StackName}
+      AlarmActions:
+        - !Ref SuccessSNSTopic
+      TreatMissingData: !Ref TreatMissingData
+      DatapointsToAlarm: !Ref DatapointsToAlarm
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}_success_alarm
+        - Key: project
+          Value: !Sub ${AWS::StackName}
+
+  FailureAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub ${AWS::StackName}_failure
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      EvaluationPeriods: !Ref EvaluationPeriods
+      MetricName: !Sub ${AWS::StackName}_failure_metric
+      Namespace: Custom/ECSFargate
+      Period: !Ref Period
+      Statistic: Sum
+      Threshold: 1
+      AlarmDescription: !Sub This alarm monitors failures in fargate task for ${AWS::StackName}
+      AlarmActions:
+        - !Ref FailureSNSTopic
+      TreatMissingData: !Ref TreatMissingData
+      DatapointsToAlarm: !Ref DatapointsToAlarm
+      Tags:
+        - Key: Name
+          Value: !Sub ${AWS::StackName}_failure_alarm
+        - Key: project
+          Value: !Sub ${AWS::StackName}
+
+  # EventBridge rule for ECS task state changes
+  TaskExitFailureRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub ${AWS::StackName}_task_exit_failure
+      Description: Match tasks with certain stopped codes
+      State: ENABLED
+      EventPattern:
+        source:
+          - aws.ecs
+        detail-type:
+          - ECS Task State Change
+        detail:
+          clusterArn:
+            - !Sub arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}
+          lastStatus:
+            - STOPPED
+          stopCode:
+            anything-but:
+              - UserInitiated
+              - ServiceSchedulerInitiated
+              - EssentialContainerExited
+      Targets:
+        - Id: !Sub ${AWS::StackName}_ecs_task_stopped_sns
+          Arn: !Ref FailureSNSTopic
+      Tags:
+        - Key: project
+          Value: !Sub ${AWS::StackName}
+
+  # AWS Chatbot Slack configuration
+  ChatbotSlackConfiguration:
+    Type: AWS::Chatbot::SlackChannelConfiguration
+    Properties:
+      ConfigurationName: !Sub ${AWS::StackName}_slack_config
+      IamRoleArn: !GetAtt ChatbotRole.Arn
+      SlackChannelId: !Ref SlackChannelId
+      SlackWorkspaceId: !Ref SlackWorkspaceId
+      SnsTopicArns:
+        - !Ref SuccessSNSTopic
+        - !Ref FailureSNSTopic
+      GuardrailPolicies:
+        - arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess
+        - !GetAtt AdditionalGuardrailPolicy.Arn
+      LoggingLevel: !Ref LoggingLevel
+      Tags:
+        - Key: project
+          Value: !Sub ${AWS::StackName}
+
+Outputs:
+  SuccessSNSTopicArn:
+    Description: ARN of the success SNS topic
+    Value: !Ref SuccessSNSTopic
+    Export:
+      Name: !Sub ${AWS::StackName}-SuccessSNSTopicArn
+
+  FailureSNSTopicArn:
+    Description: ARN of the failure SNS topic
+    Value: !Ref FailureSNSTopic
+    Export:
+      Name: !Sub ${AWS::StackName}-FailureSNSTopicArn
+
+  ChatbotRoleArn:
+    Description: ARN of the Chatbot IAM role
+    Value: !GetAtt ChatbotRole.Arn
+    Export:
+      Name: !Sub ${AWS::StackName}-ChatbotRoleArn
