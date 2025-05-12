@@ -17,12 +17,8 @@ success_pattern               = "[SUCCESS]"
 failure_pattern               = "[ERROR]"
 evaluation_periods            = 1
 period                        = 60
-container_exit_evaluation_periods = 1
-container_exit_period         = 60
 treat_missing_data            = "notBreaching"  # Best for application metrics/scheduled tasks
-container_missing_data        = "missing"       # Best for infrastructure metrics per AWS
 datapoints_to_alarm           = 1
-container_exit_threshold      = 0               # Any non-zero exit is considered failure
 
 logging_level                 = "INFO"          # Options: ERROR, INFO, NONE
 guardrail_policies            = [

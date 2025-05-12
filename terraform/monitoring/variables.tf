@@ -57,18 +57,6 @@ variable "period" {
   default     = 60
 }
 
-variable "container_exit_evaluation_periods" {
-  description = "Number of periods to evaluate for container exit alarms"
-  type        = number
-  default     = 1
-}
-
-variable "container_exit_period" {
-  description = "Duration in seconds to evaluate container exit metrics"
-  type        = number
-  default     = 60
-}
-
 variable "treat_missing_data" {
   description = "How to treat missing data in CloudWatch alarms (missing, ignore, breaching, notBreaching)"
   type        = string
@@ -79,26 +67,10 @@ variable "treat_missing_data" {
   }
 }
 
-variable "container_missing_data" {
-  description = "How to treat missing data specifically for container exit alarms (missing is recommended for EC2/container infrastructure)"
-  type        = string
-  default     = "missing"
-  validation {
-    condition     = contains(["missing", "ignore", "breaching", "notBreaching"], var.container_missing_data)
-    error_message = "The container_missing_data value must be one of: missing, ignore, breaching, notBreaching."
-  }
-}
-
 variable "datapoints_to_alarm" {
   description = "Number of datapoints that must be breaching to trigger the alarm"
   type        = number
   default     = 1
-}
-
-variable "container_exit_threshold" {
-  description = "Exit code threshold for container failures (0 means any non-zero exit is a failure)"
-  type        = number
-  default     = 0
 }
 
 variable "logging_level" {
