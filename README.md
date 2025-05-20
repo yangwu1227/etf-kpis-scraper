@@ -16,24 +16,13 @@ For a detailed walkthrough of the project, check out the following blog post: [S
 
 # Project Setup
 
-## Fork and Clone the Repository
-
-Fork the repository and clone the forked repository to local machine:
-
-```bash
-# HTTPS
-$ git clone https://github.com/YOUR_GITHUB_USERNAME/etf-kpis-scraper.git
-# SSH
-$ git clone git@github/YOUR_GITHUB_USERNAME/etf-kpis-scraper.git
-```
-
-## Set Up with `poetry`
+## Set Up `poetry`
 
 Install `poetry` using the official installer. Detailed instructions can be found in [Poetry's Official Documentation](https://python-poetry.org/docs/#installing-with-the-official-installer). Make sure to add `poetry` to your PATH. Refer to the official documentation linked above for specific steps for different operating systems.
 
 There are three primary methods to set up and use `poetry` for this project:
 
-### Method 1: Python Interpreter tied to a Virtual Environment
+### Method 1: Python Interpreter Managed by `poetry` (In-Project Virtual Environment)
 
 Configure `poetry` to create the virtual environment inside the project's root directory (and only do so for the current project[--local](https://python-poetry.org/docs/configuration/#local-configuration) flag):
 
@@ -108,4 +97,4 @@ The workflows require the following secrets:
 
 To deploy the resources programmatically via Terraform instead of using the AWS console, ensure that the AWS CLI is installed on the machine used for development and that it is configured with the necessary credentials (See the [AWS CLI Documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)).
 
-A simple starting point, though it violates the principle of least privilege, is to use the [AdministratorAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AdministratorAccess.html) policy.
+A simple starting point, though it violates the principle of least privilege, is to attach the [AdministratorAccess](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AdministratorAccess.html) policy.
