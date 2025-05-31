@@ -4,7 +4,7 @@ description = "ETF kpis scraper leveraging AWS, Yahoo Finance, and Alpha Vantage
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "yfinance (>=0.2.61)",
+    "yfinance (>=0.2.63)",
     "pandas (>=2.2.3)",
     "awswrangler (>=3.11.0) ; python_version >= '3.12' and python_version < '4.0'",
 ]
@@ -35,13 +35,6 @@ poetry-plugin-export = ">=1.9"
 python_version = "3.12"
 ignore_missing_imports = true
 disable_error_code = ["import-untyped"]
-
-[[tool.mypy.overrides]]
-module = "src.deploy_stack"
-disable_error_code = [
-    "arg-type",
-    "return-value"
-]
 
 [tool.ruff]
 exclude = [
