@@ -98,19 +98,11 @@ variable "guardrail_policies" {
 variable "chatbot_policies" {
   description = "List of IAM permissions for the policy to attach to the ChatBot role"
   type        = list(string)
-  default = [
-    "cloudwatch:Describe*",
-    "cloudwatch:Get*",
-    "cloudwatch:List*",
-    "logs:Get*",
-    "logs:List*",
-    "logs:Describe*",
-    "logs:TestMetricFilter",
-    "logs:FilterLogEvents",
-    "sns:Get*",
-    "sns:List*",
-    "ecs:DescribeTasks"
-  ]
+}
+
+variable "additional_guardrail_policy_actions" {
+  description = "List of IAM actions for the additional guardrail policy for AWS ChatBot"
+  type        = list(string)
 }
 
 # Add these new variables for SNS delivery policy

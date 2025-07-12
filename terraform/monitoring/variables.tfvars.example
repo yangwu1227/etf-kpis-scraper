@@ -28,7 +28,7 @@ chatbot_tags                  = {
   Environment = "Development",
   Service     = "Monitoring"
 }
-chatbot_policies              = [
+chatbot_policies = [
   "cloudwatch:Describe*",
   "cloudwatch:Get*",
   "cloudwatch:List*",
@@ -36,10 +36,15 @@ chatbot_policies              = [
   "logs:List*",
   "logs:Describe*",
   "logs:PutQueryDefinition",
-  "logs:StartQuery", 
+  "logs:StartQuery",
   "logs:TestMetricFilter",
   "logs:FilterLogEvents",
   "sns:Get*",
   "sns:List*",
   "ecs:DescribeTasks"
+]
+additional_guardrail_policy_actions = [
+  "ecs:DescribeTasks",
+  "logs:StartQuery",
+  "logs:PutQueryDefinition"
 ]
