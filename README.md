@@ -69,8 +69,6 @@ To test run the code locally, create a `.env` file in the root directory with th
 ```bash
 API_KEY=your_alpha_vantage_api_key
 S3_BUCKET=your_s3_bucket_name
-IPO_DATE=threshold_for_etf_ipo_date
-MAX_ETFS=maximum_number_of_etfs_to_scrape
 PARQUET=True
 ENV=dev
 ```
