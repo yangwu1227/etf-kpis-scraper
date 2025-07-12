@@ -264,8 +264,12 @@ resource "aws_iam_policy" "additional_guardrail_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["ecs:DescribeTasks"]
+        Effect = "Allow"
+        Action = [
+          "ecs:DescribeTasks",
+          "logs:StartQuery",
+          "logs:PutQueryDefinition"
+        ]
         Resource = "*"
       }
     ]

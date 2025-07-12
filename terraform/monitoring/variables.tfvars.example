@@ -35,6 +35,8 @@ chatbot_policies              = [
   "logs:Get*",
   "logs:List*",
   "logs:Describe*",
+  "logs:PutQueryDefinition",
+  "logs:StartQuery", 
   "logs:TestMetricFilter",
   "logs:FilterLogEvents",
   "sns:Get*",
