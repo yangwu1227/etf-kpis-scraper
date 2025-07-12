@@ -2,16 +2,29 @@ import os
 from datetime import datetime
 from logging import Logger
 from pathlib import Path
+from random import choices
+from typing import Dict, List, Union
 
-import numpy as np
 import pandas as pd
+import requests
 import yfinance as yf
-from curl_cffi.requests.exceptions import HTTPError
 
 apikey = os.getenv("API_KEY")
-csv_url = f"https://www.alphavantage.co/query?function=LISTING_STATUS&state=active&apikey={apikey}"
+url = f"https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey={apikey}"
 pd.set_option("mode.copy_on_write", True)
-random_state = np.random.RandomState(12)
+etf_tickers = [
+    "SPY",
+    "VOO",
+    "VTI",
+    "QTEC",
+    "QQQM",
+    "IYW",
+    "VGT",
+    "SMH",
+    "SOXX",
+    "PSI",
+    "XSD",
+]
 
 # Set the cache location for yfinance
 default_cache_location = Path.cwd() / ".cache" / "py-yfinance"
@@ -21,57 +34,60 @@ yf.set_tz_cache_location(default_cache_location)
 skippable_http_status_codes = {404, 408}
 
 
-def query_etf_data(logger: Logger, max_etfs: int, ipo_date: datetime) -> pd.DataFrame:
+def query_etf_and_stock_data(logger: Logger, env: str) -> pd.DataFrame:
     """
-    Query ETFs from the Alpha Vantage API and Yahoo Finance API.
+    Query ETFs and top 20 biggest gainer stock data from the Alpha Vantage API and Yahoo Finance API.
 
     Parameters
     ----------
     logger : Logger
         Logger instance to log information
-    max_etfs : int
-        Maximum number of ETFs to query, to avoid hitting the rate limit
-    ipo_date : datetime
-        Keep ETFs that were IPOed after this date
+    env : str
+        Environment variable to determine how many requests to make
 
     Returns
     -------
     pd.DataFrame
-        DataFrame containing ETF data
+        DataFrame containing ETF and stock data
     """
-    logger.info("Making request to endpoint, which uses CSV format")
-    etf_data = pd.read_csv(csv_url)
-    etf_data = etf_data.rename(
-        columns={"assetType": "asset_type", "ipoDate": "ipo_date"}
-    )
-    # Filter for ETFs on NASDAQ and NYSE
-    etf_data = etf_data.loc[
-        (etf_data["asset_type"] == "ETF")
-        & (
-            (etf_data["exchange"] == "NASDAQ")
-            | (etf_data["exchange"].str.contains("NYSE"))
+    if not apikey:
+        logger.error("[ERROR] API_KEY environment variable is not set")
+        raise ValueError("API_KEY environment variable is required")
+
+    logger.info("Making request to Alpha Vantage API for top gainers data")
+    response: requests.Response = requests.get(url)
+    if response.status_code != 200:
+        logger.error(f"Request to {url} failed with status code {response.status_code}")
+        raise requests.exceptions.RequestException(
+            f"Request to {url} failed with status code {response.status_code}"
         )
-    ]
-    etf_data = etf_data[["symbol", "name", "ipo_date"]]
-    etf_data["ipo_date"] = pd.to_datetime(etf_data["ipo_date"])
-    etf_data = etf_data.loc[etf_data["ipo_date"] > ipo_date]
-    if max_etfs < etf_data.shape[0]:
-        etf_data = etf_data.sample(n=max_etfs, random_state=random_state)
-    logger.info(
-        f"Number of active ETFs on Nasdaq and NYSE as of {datetime.today().strftime('%Y-%m-%d')} with IPO date after {ipo_date.strftime('%Y-%m-%d')}: {etf_data.shape[0]}"
+    response_data: Dict[str, Union[str, List[Dict[str, str]]]] = response.json()
+    top_gainers: pd.DataFrame = pd.DataFrame(response_data["top_gainers"])
+    top_gainers_tickers: List[str] = top_gainers["ticker"].to_list()
+    gains: Dict[str, str] = dict(
+        zip(top_gainers["ticker"], top_gainers["change_percentage"])
     )
 
-    symbols = etf_data["symbol"].str.cat(sep=" ")
-    tickers = yf.Tickers(tickers=symbols)
+    logger.info(
+        "Top 20 Gainer Stocks:\n"
+        + "\n".join([f"   {ticker: <8} {pct: >10}" for ticker, pct in gains.items()])
+    )
+    if env == "prod":
+        tickers = yf.Tickers(tickers=top_gainers_tickers + etf_tickers)
+    else:
+        tickers = yf.Tickers(
+            tickers=choices(population=etf_tickers, k=3)
+            + choices(population=top_gainers_tickers, k=3)
+        )
 
     logger.info(
-        "Sending GET requests to yahoo finance for each ETF in the list of ETFs from Alpha Vantage"
+        f"Sending GET requests to Yahoo Finance for data on {len(tickers.tickers)} tickers (ETFs and stocks)"
     )
     yf_data = []
     for ticker in tickers.tickers.values():
         try:
             info = ticker.info or {}
-        except HTTPError as http_error:
+        except requests.exceptions.HTTPError as http_error:
             if (
                 response := http_error.response
             ) and response.status_code in skippable_http_status_codes:
@@ -91,9 +107,12 @@ def query_etf_data(logger: Logger, max_etfs: int, ipo_date: datetime) -> pd.Data
         yf_data.append(
             {
                 "symbol": info.get("symbol", pd.NA),
+                "first_trade_date": info.get("firstTradeDateMilliseconds", pd.NA),
                 "business_summary": info.get("longBusinessSummary", pd.NA),
                 "previous_close": info.get("previousClose", pd.NA),
                 "nav_price": info.get("navPrice", pd.NA),
+                "dividend_yield": info.get("dividendYield", pd.NA),
+                "net_expense_ratio": info.get("netExpenseRatio", pd.NA),
                 "trailing_pe": info.get("trailingPE", pd.NA),
                 "volume": info.get("volume", pd.NA),
                 "average_volume": info.get("averageVolume", pd.NA),
@@ -108,24 +127,25 @@ def query_etf_data(logger: Logger, max_etfs: int, ipo_date: datetime) -> pd.Data
                 "five_year_avg_return": info.get("fiveYearAverageReturn", pd.NA),
             }
         )
-    logger.info(
-        "Completed requesting data from yahoo finance, saving it as a data frame"
-    )
-    yf_data = pd.DataFrame(yf_data)
+    logger.info("Completed requesting data from Yahoo Finance, creating DataFrame")
+    data = pd.DataFrame(yf_data).dropna(how="all", axis=0)
 
-    logger.info(
-        "Left joining performance data from yahoo finance data onto the etf data using 'symbol' as a key"
+    logger.info("Converting first_trade_date to datetime format and adding date column")
+    data["first_trade_date"] = pd.to_datetime(
+        data["first_trade_date"], unit="ms", errors="coerce"
     )
-    data = pd.merge(left=etf_data, right=yf_data, on="symbol", how="left")
+    data["date"] = datetime.today().strftime("%Y-%m-%d")
 
     logger.info("Mapping data types")
     data = data.astype(
         {
             "symbol": pd.StringDtype(),
-            "name": pd.StringDtype(),
-            "ipo_date": "datetime64[ns]",
+            "date": "datetime64[ns]",
+            "first_trade_date": "datetime64[ns]",
             "previous_close": pd.Float64Dtype(),
             "nav_price": pd.Float64Dtype(),
+            "dividend_yield": pd.Float64Dtype(),
+            "net_expense_ratio": pd.Float64Dtype(),
             "trailing_pe": pd.Float64Dtype(),
             "volume": pd.Float64Dtype(),
             "average_volume": pd.Float64Dtype(),
