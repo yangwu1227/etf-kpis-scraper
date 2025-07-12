@@ -104,6 +104,23 @@ Parameters:
       - INFO
       - NONE
 
+  ChatbotPolicyActions:
+    Type: CommaDelimitedList
+    Description: List of IAM permissions for the policy to attach to the ChatBot role
+    Default: "cloudwatch:Describe*,cloudwatch:Get*,cloudwatch:List*,logs:Get*,logs:List*,logs:Describe*,logs:PutQueryDefinition,logs:StartQuery,logs:TestMetricFilter,logs:FilterLogEvents,sns:Get*,sns:List*,ecs:DescribeTasks"
+
+  # Guardrail policies parameters
+  GuardrailPolicyArns:
+    Type: CommaDelimitedList
+    Description: List of IAM policy ARNs that are applied as channel guardrails
+    Default: "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"
+
+  # Additional guardrail policy parameters
+  AdditionalGuardrailPolicyActions:
+    Type: CommaDelimitedList
+    Description: List of IAM actions for the additional guardrail policy for AWS ChatBot
+    Default: "ecs:DescribeTasks,logs:StartQuery,logs:PutQueryDefinition"
+
 Resources:
   # SNS topics for notifications
   SuccessSNSTopic:
@@ -203,18 +220,7 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Action:
-              - cloudwatch:Describe*
-              - cloudwatch:Get*
-              - cloudwatch:List*
-              - logs:Get*
-              - logs:List*
-              - logs:Describe*
-              - logs:TestMetricFilter
-              - logs:FilterLogEvents
-              - sns:Get*
-              - sns:List*
-              - ecs:DescribeTasks
+            Action: !Ref ChatbotPolicyActions
             Resource: "*"
       Roles:
         - !Ref ChatbotRole
@@ -227,8 +233,7 @@ Resources:
         Version: "2012-10-17"
         Statement:
           - Effect: Allow
-            Action:
-              - ecs:DescribeTasks
+            Action: !Ref AdditionalGuardrailPolicyActions
             Resource: "*"
       Roles:
         - !Ref ChatbotRole
@@ -341,9 +346,12 @@ Resources:
       SnsTopicArns:
         - !Ref SuccessSNSTopic
         - !Ref FailureSNSTopic
-      GuardrailPolicies:
-        - arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess
-        - !GetAtt AdditionalGuardrailPolicy.Arn
+      GuardrailPolicies: !Split
+        - ","
+        - !Sub
+          - "${GuardrailPolicies},${AdditionalPolicy}"
+          - GuardrailPolicies: !Join [",", !Ref GuardrailPolicyArns]
+            AdditionalPolicy: !GetAtt AdditionalGuardrailPolicy.Arn
       LoggingLevel: !Ref LoggingLevel
       Tags:
         - Key: project

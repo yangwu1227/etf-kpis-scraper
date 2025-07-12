@@ -37,10 +37,9 @@
     "SizeInGiB": 21
   },
   "monitoring.yaml": {
-    "StackName": "etf_kpis_scraper_monitoring",
     "ECSClusterName": "etf_kpis_scraper_ecs_fargate_cluster",
-    "SlackWorkspaceId": "slack_workspace_id",
-    "SlackChannelId": "slack_channel_id",
+    "SlackWorkspaceId": "T0123456789",
+    "SlackChannelId": "C0123456789",
     "SuccessPattern": "[SUCCESS]",
     "FailurePattern": "[ERROR]",
     "EvaluationPeriods": 1,
@@ -53,6 +52,9 @@
     "SNSNumNoDelayRetries": 3,
     "SNSNumMinDelayRetries": 2,
     "SNSBackoffFunction": "exponential",
-    "LoggingLevel": "INFO"
+    "LoggingLevel": "INFO",
+    "AdditionalGuardrailPolicyActions": "ecs:DescribeTasks,logs:StartQuery,logs:PutQueryDefinition",
+    "ChatbotPolicyActions": "cloudwatch:Describe*,cloudwatch:Get*,cloudwatch:List*,logs:Get*,logs:List*,logs:Describe*,logs:PutQueryDefinition,logs:StartQuery,logs:TestMetricFilter,logs:FilterLogEvents,sns:Get*,sns:List*,ecs:DescribeTasks",
+    "GuardrailPolicyArns": "arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"
   }
 }
