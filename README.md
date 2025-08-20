@@ -51,7 +51,7 @@ $ poetry sync --all-groups
 1. Create a new conda environment named `etf_kpis_scraper` with Python `3.12`:
 
 ```bash
-$ yes | conda create --name etf_kpis_scraper python=3.12
+$ conda create --name etf_kpis_scraper -y python=3.12
 ```
 
 2. Install the project dependencies (ensure that the `conda` environment is activated):
