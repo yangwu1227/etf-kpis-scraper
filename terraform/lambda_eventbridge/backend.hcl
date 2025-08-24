@@ -2,4 +2,4 @@ bucket         = "tf-cf-templates"
 key            = "terraform-states/etf-kpis-scraper/lambda-eventbridge/terraform.tfstate"
 region         = "us-east-1"
 profile        = "admin"
-dynamodb_table = "global_terraform_state_locks"
+use_lockfile   = true
