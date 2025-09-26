@@ -1,8 +1,3 @@
-variable "region" {
-  description = "The AWS region to deploy resources in"
-  type        = string
-}
-
 variable "profile" {
   description = "The AWS credentials profile to use for deployment"
   type        = string
@@ -23,6 +18,8 @@ variable "ecs_fargate_state_key" {
   type        = string
 }
 
+/* ---------------------------------- Slack --------------------------------- */
+
 variable "slack_workspace_id" {
   description = "The ID of the Slack workspace/team to send notifications to (used as slack_team_id)"
   type        = string
@@ -32,6 +29,8 @@ variable "slack_channel_id" {
   description = "The ID of the Slack channel to send notifications to"
   type        = string
 }
+
+/* ------------------------------- Cloudwatch ------------------------------- */
 
 variable "success_pattern" {
   description = "Log pattern that indicates task success"
@@ -73,6 +72,8 @@ variable "datapoints_to_alarm" {
   default     = 1
 }
 
+/* --------------------------------- ChatBot -------------------------------- */
+
 variable "logging_level" {
   description = "Specifies the logging level for ChatBot configuration (ERROR, INFO, or NONE)"
   type        = string
@@ -83,29 +84,23 @@ variable "logging_level" {
   }
 }
 
-variable "chatbot_tags" {
-  description = "Tags to add to the ChatBot configuration"
-  type        = map(string)
-  default     = {}
-}
-
-variable "guardrail_policies" {
-  description = "List of IAM policy ARNs that are applied as channel guardrails (used as guardrail_policy_arns)"
-  type        = list(string)
-  default     = ["arn:aws:iam::aws:policy/CloudWatchReadOnlyAccess"]
-}
-
-variable "chatbot_policies" {
-  description = "List of IAM permissions for the policy to attach to the ChatBot role"
+variable "chatbot_guardrail_ecs_actions" {
+  description = "List of IAM actions applied as channel guardrails; these actions restrict ECS actions users can perform from slack using the chatbot"
   type        = list(string)
 }
 
-variable "additional_guardrail_policy_actions" {
-  description = "List of IAM actions for the additional guardrail policy for AWS ChatBot"
+variable "chatbot_guardrail_logs_actions" {
+  description = "List of IAM actions applied as channel guardrails; these actions restrict CloudWatch logs actions users can perform from slack using the chatbot"
   type        = list(string)
 }
 
-# Add these new variables for SNS delivery policy
+variable "chatbot_actions" {
+  description = "List of actions for the policy to attach to the ChatBot role; this must include guardrail actions defined above, but can also include additional actions"
+  type        = list(string)
+}
+
+/* ----------------------------------- SNS ---------------------------------- */
+
 variable "sns_min_delay_target" {
   description = "The minimum delay for SNS delivery retries (in seconds)"
   type        = number

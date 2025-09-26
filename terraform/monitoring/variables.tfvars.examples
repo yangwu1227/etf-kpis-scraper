@@ -1,0 +1,46 @@
+profile                = "default"
+stack_name             = "stack_name"
+terraform_state_bucket = "terraform-state-bucket-name"
+
+sns_min_delay_target      = 1
+sns_max_delay_target      = 60
+sns_num_retries           = 50
+sns_num_no_delay_retries  = 3
+sns_num_min_delay_retries = 2
+sns_backoff_function      = "exponential"
+
+ecs_fargate_state_key = "s3/key/to/ecs/fargate/state"
+slack_workspace_id    = "T0123456789" # Slack workspace ID
+slack_channel_id      = "C0123456789" # Slack channel ID
+success_pattern       = "[SUCCESS]"
+failure_pattern       = "[ERROR]"
+evaluation_periods    = 1
+period                = 60
+treat_missing_data    = "notBreaching" # Best for application metrics/scheduled tasks
+datapoints_to_alarm   = 1
+
+logging_level = "INFO"
+chatbot_actions = [
+  "cloudwatch:Describe*",
+  "cloudwatch:Get*",
+  "cloudwatch:List*",
+  "logs:Get*",
+  "logs:List*",
+  "logs:Describe*",
+  "logs:PutQueryDefinition",
+  "logs:StartQuery",
+  "logs:TestMetricFilter",
+  "logs:FilterLogEvents",
+  "sns:Get*",
+  "sns:List*",
+  "ecs:DescribeTasks",
+  "ecs:ListTasks",
+]
+chatbot_guardrail_ecs_actions = [
+  "ecs:DescribeTasks",
+  "ecs:ListTasks",
+]
+chatbot_guardrail_logs_actions = [
+  "logs:StartQuery",
+  "logs:PutQueryDefinition"
+]

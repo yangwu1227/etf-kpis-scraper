@@ -9,18 +9,5 @@ terraform {
 }
 
 provider "aws" {
-  region  = var.region
   profile = var.profile
 }
-
-data "terraform_remote_state" "ecs_fargate" {
-  backend = "s3"
-  config = {
-    bucket  = var.terraform_state_bucket
-    key     = var.ecs_fargate_state_key
-    region  = var.region
-    profile = var.profile
-  }
-}
-
-data "aws_caller_identity" "current" {}
