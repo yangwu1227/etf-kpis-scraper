@@ -5,9 +5,7 @@ resource "aws_ecr_repository" "ecr_repo" {
     scan_on_push = true
   }
 
-  tags = {
-    project = "${var.stack_name}"
-  }
+  tags = local.tags
 }
 
 resource "aws_ecr_lifecycle_policy" "repository_cleanup_policy" {
