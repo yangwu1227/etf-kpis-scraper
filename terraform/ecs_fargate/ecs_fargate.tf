@@ -8,9 +8,7 @@ resource "aws_ecs_cluster" "ecs_cluster" {
     value = "enabled"
   }
 
-  tags = {
-    project = var.stack_name
-  }
+  tags = local.tags
 }
 
 # ECS Cluster Capacity Providers
@@ -55,7 +53,7 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
   container_definitions = jsonencode([
     {
       name      = "${var.stack_name}_container"
-      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/${data.terraform_remote_state.s3_ecr.outputs.ecr_repo_name}:latest"
+      image     = "${local.aws_account_id}.dkr.ecr.${local.aws_region}.amazonaws.com/${data.terraform_remote_state.s3_ecr.outputs.ecr_repo_name}:latest"
       essential = true
       environmentFiles = [
         {
@@ -68,14 +66,12 @@ resource "aws_ecs_task_definition" "ecs_task_definition" {
         options = {
           awslogs-create-group  = "true"
           awslogs-group         = "/aws/ecs/${var.stack_name}"
-          awslogs-region        = var.region
+          awslogs-region        = local.aws_region
           awslogs-stream-prefix = "ecs"
         }
       }
     }
   ])
 
-  tags = {
-    project = var.stack_name
-  }
+  tags = local.tags
 }
