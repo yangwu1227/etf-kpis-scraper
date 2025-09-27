@@ -10,9 +10,7 @@ resource "aws_lambda_function" "lambda_function" {
   s3_bucket = var.lambda_code_s3_bucket
   s3_key    = var.lambda_code_s3_key
 
-  tags = {
-    project = var.stack_name
-  }
+  tags = local.tags
 
   environment {
     variables = {
