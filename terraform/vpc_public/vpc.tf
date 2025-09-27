@@ -2,16 +2,16 @@ resource "aws_vpc" "public" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
-  tags = {
-    Name = "${var.stack_name}_vpc"
-  }
+  tags = merge(local.tags, {
+    name = "${var.stack_name}_vpc"
+  })
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.public.id
-  tags = {
-    Name = "${var.stack_name}_igw"
-  }
+  tags = merge(local.tags, {
+    name = "${var.stack_name}_igw"
+  })
 }
 
 resource "aws_subnet" "public" {
@@ -25,16 +25,16 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
   availability_zone       = each.value.az
 
-  tags = {
-    Name = "${var.stack_name}_public_subnet_${each.key}"
-  }
+  tags = merge(local.tags, {
+    name = "${var.stack_name}_public_subnet_${each.key}"
+  })
 }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.public.id
-  tags = {
-    Name = "${var.stack_name}_rtb"
-  }
+  tags = merge(local.tags, {
+    name = "${var.stack_name}_rtb"
+  })
 }
 
 resource "aws_route" "public_internet" {
@@ -60,7 +60,7 @@ resource "aws_security_group" "public" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  tags = {
-    Name = "${var.stack_name}_sg"
-  }
+  tags = merge(local.tags, {
+    name = "${var.stack_name}_sg"
+  })
 }
