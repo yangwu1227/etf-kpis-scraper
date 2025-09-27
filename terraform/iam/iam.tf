@@ -12,9 +12,7 @@ resource "aws_iam_role" "lambda_execution_role" {
     ]
   })
 
-  tags = {
-    project = var.stack_name
-  }
+  tags = local.tags
 }
 
 resource "aws_iam_policy" "lambda_policy" {
@@ -29,7 +27,7 @@ resource "aws_iam_policy" "lambda_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/lambda/*"
+        Resource = "arn:aws:logs:${local.aws_region}:${local.aws_account_id}:log-group:/aws/lambda/*"
       },
       {
         Effect = "Allow"
@@ -43,8 +41,8 @@ resource "aws_iam_policy" "lambda_policy" {
         Effect = "Allow"
         Action = ["iam:PassRole"]
         Resource = [
-          "arn:aws:iam::${var.account_id}:role/${var.stack_name}_ecs_execution_role",
-          "arn:aws:iam::${var.account_id}:role/${var.stack_name}_ecs_task_role"
+          "arn:aws:iam::${local.aws_account_id}:role/${var.stack_name}_ecs_execution_role",
+          "arn:aws:iam::${local.aws_account_id}:role/${var.stack_name}_ecs_task_role"
         ]
       }
     ]
@@ -71,9 +69,7 @@ resource "aws_iam_role" "ecs_execution_role" {
     ]
   })
 
-  tags = {
-    project = var.stack_name
-  }
+  tags = local.tags
 }
 
 resource "aws_iam_policy" "ecs_execution_policy" {
@@ -93,7 +89,7 @@ resource "aws_iam_policy" "ecs_execution_policy" {
         ]
         Resource = [
           data.terraform_remote_state.s3_ecr.outputs.ecr_repo_arn,
-          "arn:aws:logs:${var.region}:${var.account_id}:log-group:/aws/ecs/*"
+          "arn:aws:logs:${local.aws_region}:${local.aws_account_id}:log-group:/aws/ecs/*"
         ]
       },
       {
@@ -130,9 +126,7 @@ resource "aws_iam_role" "ecs_task_role" {
     ]
   })
 
-  tags = {
-    project = var.stack_name
-  }
+  tags = local.tags
 }
 
 resource "aws_iam_policy" "ecs_task_policy" {
@@ -167,9 +161,9 @@ resource "aws_iam_openid_connect_provider" "github_oidc_provider" {
     "1c58a3a8518e8759bf075b76b750d4f2df264fcd",
     "6938fd4d98bab03faadb97b34396831e3780aea1"
   ]
-
-  tags = {
-    Name = "github_oidc_provider"
+  lifecycle {
+    ignore_changes  = all
+    prevent_destroy = true
   }
 }
 
@@ -197,9 +191,7 @@ resource "aws_iam_role" "github_actions_role" {
     ]
   })
 
-  tags = {
-    project = var.stack_name
-  }
+  tags = local.tags
 }
 
 resource "aws_iam_policy" "github_actions_policy" {
@@ -213,7 +205,7 @@ resource "aws_iam_policy" "github_actions_policy" {
           "lambda:UpdateFunctionCode",
           "lambda:GetFunction"
         ]
-        Resource = "arn:aws:lambda:${var.region}:${var.account_id}:function:*"
+        Resource = "arn:aws:lambda:${local.aws_region}:${local.aws_account_id}:function:*"
       },
       {
         Effect = "Allow"
