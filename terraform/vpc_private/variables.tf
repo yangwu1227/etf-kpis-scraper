@@ -1,8 +1,3 @@
-variable "region" {
-  description = "The AWS region to deploy resources in"
-  type        = string
-}
-
 variable "profile" {
   description = "The AWS credentials profile to use for deployment"
   type        = string
