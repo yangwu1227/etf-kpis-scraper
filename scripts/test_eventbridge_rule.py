@@ -40,7 +40,7 @@ logger.addHandler(logging.StreamHandler(stream=sys.stdout))
 
 
 @dataclass(frozen=True)
-class ECSConfig:
+class ECSConfig(object):
     """
     Configuration for triggering an ECS task-level failure.
 
