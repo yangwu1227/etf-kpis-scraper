@@ -3,22 +3,20 @@ resource "aws_vpc" "public" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = merge(local.tags, {
-    name = "${var.stack_name}_vpc"
+    Name        = "${var.stack_name}_vpc"
+    utilization = "${local.utilization_percent}%"
   })
 }
 
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.public.id
   tags = merge(local.tags, {
-    name = "${var.stack_name}_igw"
+    Name = "${var.stack_name}_igw"
   })
 }
 
 resource "aws_subnet" "public" {
-  for_each = tomap({
-    for index, cidr in var.public_subnet_cidrs :
-    index => { cidr = cidr, az = var.availability_zones[index] }
-  })
+  for_each = local.public_subnet_map
 
   vpc_id                  = aws_vpc.public.id
   cidr_block              = each.value.cidr
@@ -26,14 +24,14 @@ resource "aws_subnet" "public" {
   availability_zone       = each.value.az
 
   tags = merge(local.tags, {
-    name = "${var.stack_name}_public_subnet_${each.key}"
+    Name = "${var.stack_name}_public_subnet_${each.key}"
   })
 }
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.public.id
   tags = merge(local.tags, {
-    name = "${var.stack_name}_rtb"
+    Name = "${var.stack_name}_rtb"
   })
 }
 
@@ -61,6 +59,6 @@ resource "aws_security_group" "public" {
   }
 
   tags = merge(local.tags, {
-    name = "${var.stack_name}_sg"
+    Name = "${var.stack_name}_sg"
   })
 }
