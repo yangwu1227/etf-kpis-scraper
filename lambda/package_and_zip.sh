@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Get the current working directory
 cwd=$(pwd)
