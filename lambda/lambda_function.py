@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any, Dict, Literal, cast
+from typing import Any, Dict, List, Literal, cast
 
 import boto3
 import botocore
@@ -8,13 +8,14 @@ from mypy_boto3_ecs import ECSClient
 from mypy_boto3_ecs.type_defs import (
     ContainerOverrideTypeDef,
     NetworkConfigurationTypeDef,
+    RunTaskResponseTypeDef,
 )
-from pydantic import BaseModel
-from pydantic_settings import SettingsConfigDict
+from pydantic import BaseModel, ConfigDict
 
 ecs_client: ECSClient = boto3.client("ecs")
-logger = logging.getLogger(name="Trigger ECS Fargate Task")
+logger: logging.Logger = logging.getLogger(name="Trigger ECS Fargate Task")
 logger.setLevel(logging.INFO)
+type ASSIGN_PUBLIC_IP_OPTIONS = Literal["ENABLED", "DISABLED"]
 
 
 class EnvironmentConfig(BaseModel):
@@ -28,10 +29,10 @@ class EnvironmentConfig(BaseModel):
     subnet_1: str
     subnet_2: str
     security_group: str
-    assign_public_ip: Literal["ENABLED", "DISABLED"] = "DISABLED"
-    env: str = "prod"
+    assign_public_ip: ASSIGN_PUBLIC_IP_OPTIONS
+    env: str
 
-    model_config = SettingsConfigDict(
+    model_config = ConfigDict(
         frozen=True,
         validate_assignment=True,
         extra="forbid",
@@ -47,12 +48,12 @@ def environment_config() -> EnvironmentConfig:
     EnvironmentConfig
         Environment configuration model instance.
     """
-    assign_public_ip: Literal["ENABLED", "DISABLED"] = cast(
-        Literal["ENABLED", "DISABLED"], os.getenv("ASSIGN_PUBLIC_IP", "DISABLED")
+    assign_public_ip: ASSIGN_PUBLIC_IP_OPTIONS = cast(
+        ASSIGN_PUBLIC_IP_OPTIONS, os.getenv("ASSIGN_PUBLIC_IP", "DISABLED")
     )
 
     try:
-        env_config = EnvironmentConfig(
+        env_config: EnvironmentConfig = EnvironmentConfig(
             cluster_name=os.getenv("ECS_CLUSTER_NAME", ""),
             task_definition=os.getenv("ECS_TASK_DEFINITION", ""),
             container_name=os.getenv("ECS_CONTAINER_NAME", ""),
@@ -62,7 +63,7 @@ def environment_config() -> EnvironmentConfig:
             assign_public_ip=assign_public_ip,
             env=os.getenv("env", "prod"),
         )
-        empty_fields = [
+        empty_fields: List[str] = [
             field
             for field, value in env_config.model_dump().items()
             if field not in ["env", "assign_public_ip"] and not value
@@ -84,10 +85,10 @@ def lambda_handler(event: Dict[str, str], context: Any) -> None:
         env_config: EnvironmentConfig = environment_config()
 
         # If 'env' is passed in as part of the event payload, e.g. {"env": "dev"}, use that value
-        env = event.get("env", env_config.env)
+        env: str = event.get("env", env_config.env)
 
         # Get the latest revision of the task definition
-        version = ecs_client.describe_task_definition(
+        version: int = ecs_client.describe_task_definition(
             taskDefinition=env_config.task_definition
         )["taskDefinition"]["revision"]
 
@@ -106,7 +107,7 @@ def lambda_handler(event: Dict[str, str], context: Any) -> None:
             "environment": [{"name": "ENV", "value": env}],
         }
 
-        response = ecs_client.run_task(
+        response: RunTaskResponseTypeDef = ecs_client.run_task(
             cluster=env_config.cluster_name,
             launchType="FARGATE",
             count=1,

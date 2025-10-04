@@ -1,3 +1,2 @@
 boto3-stubs[ecs]>=1.35.97
 pydantic>=2.10.5
-pydantic-settings>=2.7.1
