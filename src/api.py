@@ -3,16 +3,18 @@ from datetime import datetime
 from logging import Logger
 from pathlib import Path
 from random import choices
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 import requests
 import yfinance as yf
 
-apikey = os.getenv("API_KEY")
-url = f"https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey={apikey}"
+apikey: Optional[str] = os.getenv("API_KEY")
+url: str = (
+    f"https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey={apikey}"
+)
 pd.set_option("mode.copy_on_write", True)
-etf_tickers = [
+etf_tickers: List[str] = [
     "SPY",
     "VOO",
     "VTI",
@@ -27,11 +29,11 @@ etf_tickers = [
 ]
 
 # Set the cache location for yfinance
-default_cache_location = Path.cwd() / ".cache" / "py-yfinance"
+default_cache_location: Path = Path.cwd() / ".cache" / "py-yfinance"
 default_cache_location.mkdir(parents=True, exist_ok=True)
 yf.set_tz_cache_location(default_cache_location)
 
-skippable_http_status_codes = {404, 408}
+skippable_http_status_codes: Set[int] = {404, 408}
 
 
 def query_etf_and_stock_data(logger: Logger, env: str) -> pd.DataFrame:
@@ -72,6 +74,7 @@ def query_etf_and_stock_data(logger: Logger, env: str) -> pd.DataFrame:
         "Top 20 Gainer Stocks:\n"
         + "\n".join([f"   {ticker: <8} {pct: >10}" for ticker, pct in gains.items()])
     )
+    tickers: yf.Tickers
     if env == "prod":
         tickers = yf.Tickers(tickers=top_gainers_tickers + etf_tickers)
     else:
@@ -83,10 +86,11 @@ def query_etf_and_stock_data(logger: Logger, env: str) -> pd.DataFrame:
     logger.info(
         f"Sending GET requests to Yahoo Finance for data on {len(tickers.tickers)} tickers (ETFs and stocks)"
     )
-    yf_data = []
+    yf_data: List[Dict[str, Any]] = []
+    info: Dict[str, Any] = {}
     for ticker in tickers.tickers.values():
         try:
-            info = ticker.info or {}
+            info = ticker.info
         except requests.exceptions.HTTPError as http_error:
             if (
                 response := http_error.response
@@ -94,7 +98,6 @@ def query_etf_and_stock_data(logger: Logger, env: str) -> pd.DataFrame:
                 logger.warning(
                     f"HTTP {response.status_code} when attempting to access `info` for ticker {ticker.ticker!r}"
                 )
-                info = {}
             else:
                 raise http_error
         except Exception as unexpected_error:
@@ -102,7 +105,6 @@ def query_etf_and_stock_data(logger: Logger, env: str) -> pd.DataFrame:
             logger.warning(
                 f"Unexpected error for ticker {ticker.ticker!r}: {unexpected_error!r}"
             )
-            info = {}
 
         yf_data.append(
             {
@@ -128,7 +130,7 @@ def query_etf_and_stock_data(logger: Logger, env: str) -> pd.DataFrame:
             }
         )
     logger.info("Completed requesting data from Yahoo Finance, creating DataFrame")
-    data = pd.DataFrame(yf_data).dropna(how="all", axis=0)
+    data: pd.DataFrame = pd.DataFrame(yf_data).dropna(how="all", axis=0)
 
     logger.info("Converting first_trade_date to datetime format and adding date column")
     data["first_trade_date"] = pd.to_datetime(

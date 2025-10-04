@@ -1,6 +1,7 @@
 import os
 import sys
 from datetime import datetime
+from logging import Logger
 from typing import Optional
 
 import pandas as pd
@@ -11,7 +12,7 @@ from src.utils import catch_errors, setup_logger, write_to_s3
 
 @catch_errors
 def main() -> int:
-    logger = setup_logger(name="ETF KPIs Scraper")
+    logger: Logger = setup_logger(name="ETF KPIs Scraper")
     logger.info("Starting ETF KPIs scraper")
     ENV: str = os.getenv("ENV", "dev")
     logger.info(f"Running the task in {ENV} mode")

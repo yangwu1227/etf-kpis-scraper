@@ -29,7 +29,7 @@ def catch_errors(decorated_function: Callable[P, R]) -> Callable[P, Union[R, int
 
     @wraps(wrapped=decorated_function)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> Union[R, int]:
-        logger = setup_logger(name=decorated_function.__name__)
+        logger: logging.Logger = setup_logger(name=decorated_function.__name__)
         try:
             return decorated_function(*args, **kwargs)
         except Exception as unhandled_error:
@@ -56,11 +56,15 @@ def setup_logger(name: str) -> logging.Logger:
     logging.Logger
         A logger instance
     """
-    logger = logging.getLogger(name)  # Return a logger with the specified name
+    logger: logging.Logger = logging.getLogger(
+        name
+    )  # Return a logger with the specified name
 
     if not logger.hasHandlers():
-        handler = logging.StreamHandler(sys.stdout)
-        formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+        handler: logging.StreamHandler = logging.StreamHandler(sys.stdout)
+        formatter: logging.Formatter = logging.Formatter(
+            "%(asctime)s %(levelname)s %(name)s: %(message)s"
+        )
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
