@@ -1,4 +1,4 @@
-FROM python:3.12-slim-bullseye AS python-base
+FROM python:3.12.11-slim-bookworm AS python-base
 
 # Ensure python I/O is unbuffered so that log messages are flushed to the stream
 ENV PYTHONUNBUFFERED=1 \ 
@@ -7,7 +7,7 @@ ENV PYTHONUNBUFFERED=1 \
     # See https://github.com/python-poetry/poetry/issues/2200 and https://github.com/python-poetry/poetry/pull/7081
     POETRY_REQUESTS_TIMEOUT=30 \
     # Poetry version
-    POETRY_VERSION=2.0.0 \
+    POETRY_VERSION=2.2.1 \
     # Override the poetry installation path
     POETRY_HOME="/opt/poetry" \
     # Create virtualenv inside the project root
