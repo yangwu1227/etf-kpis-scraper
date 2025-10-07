@@ -31,6 +31,9 @@ chatbot_actions = [
   "logs:StartQuery",
   "logs:TestMetricFilter",
   "logs:FilterLogEvents",
+  "logs:PutQueryDefinition",
+  "logs:DescribeQueryDefinitions",
+  "logs:DeleteQueryDefinition",
   "sns:Get*",
   "sns:List*",
   "ecs:DescribeTasks",
@@ -41,6 +44,6 @@ chatbot_guardrail_ecs_actions = [
   "ecs:ListTasks",
 ]
 chatbot_guardrail_logs_actions = [
+  "logs:GetQueryResults",
   "logs:StartQuery",
-  "logs:PutQueryDefinition"
 ]

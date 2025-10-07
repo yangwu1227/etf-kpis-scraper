@@ -71,9 +71,21 @@ resource "aws_iam_policy" "guardrail_logs_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = var.chatbot_guardrail_logs_actions
-        Resource = "arn:aws:logs:${local.aws_region}:${local.aws_account_id}:log-group:/ecs/${local.ecs_cluster_name}"
+        Effect = "Allow"
+        Action = var.chatbot_guardrail_logs_actions
+        Resource = [
+          "arn:aws:logs:${local.aws_region}:${local.aws_account_id}:log-group:${local.ecs_log_group_name}:*",
+        ]
+      },
+      # Allow necessary actions for query definitions, i.e., saving reusable queries in slack, which are not resource-specific
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:PutQueryDefinition",
+          "logs:DescribeQueryDefinitions",
+          "logs:DeleteQueryDefinition",
+        ]
+        Resource = "*"
       }
     ]
   })
