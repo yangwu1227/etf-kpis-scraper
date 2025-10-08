@@ -79,12 +79,8 @@ resource "aws_iam_policy" "guardrail_logs_policy" {
       },
       # Allow necessary actions for query definitions, i.e., saving reusable queries in slack, which are not resource-specific
       {
-        Effect = "Allow"
-        Action = [
-          "logs:PutQueryDefinition",
-          "logs:DescribeQueryDefinitions",
-          "logs:DeleteQueryDefinition",
-        ]
+        Effect   = "Allow"
+        Action   = var.chatbot_guardrail_logs_definitions_actions
         Resource = "*"
       }
     ]

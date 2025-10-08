@@ -94,6 +94,11 @@ variable "chatbot_guardrail_logs_actions" {
   type        = list(string)
 }
 
+variable "chatbot_guardrail_logs_definitions_actions" {
+  description = "List of IAM actions applied as channel guardrails; these actions restrict CloudWatch logs query definitions actions users can perform from slack using the chatbot"
+  type        = list(string)
+}
+
 variable "chatbot_actions" {
   description = "List of actions for the policy to attach to the ChatBot role; this must include guardrail actions defined above, but can also include additional actions"
   type        = list(string)

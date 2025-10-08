@@ -47,3 +47,8 @@ chatbot_guardrail_logs_actions = [
   "logs:GetQueryResults",
   "logs:StartQuery",
 ]
+chatbot_guardrail_logs_definitions_actions = [
+  "logs:PutQueryDefinition",
+  "logs:DescribeQueryDefinitions",
+  "logs:DeleteQueryDefinition",
+]
